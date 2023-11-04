@@ -1,5 +1,8 @@
 ### Build
 /target
 
-### IDEs
+### OS Generated
+.DS_Store
+
+### IDE Generated
 .idea
