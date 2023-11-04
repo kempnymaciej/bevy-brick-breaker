@@ -19,7 +19,7 @@ pub fn spawn_paddle(
          Paddle,
          BallObstacle {
             extends: Vec2::new(PADDLE_HALF_WIDTH, PADDLE_HALF_HEIGHT),
-            just_hit: false
+            hit_flag: false
         }));
 }
 

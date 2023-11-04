@@ -8,6 +8,6 @@ pub struct Ball {
 #[derive(Component)]
 pub struct BallObstacle {
     pub extends: Vec2,
-    pub just_hit: bool
+    pub hit_flag: bool
 }
 

@@ -45,9 +45,9 @@ pub fn bounce_ball_on_obstacles(
     for (mut ball_transform, mut ball) in balls_query.iter_mut() {
         let mut ball_position = ball_transform.translation;
 
-        for (obstacle_transform, obstacle_box) in obstacle_query.iter_mut() {
+        for (obstacle_transform, mut obstacle) in obstacle_query.iter_mut() {
             let obstacle_position = obstacle_transform.translation;
-            let obstacle_extends = obstacle_box.extends;
+            let obstacle_extends = obstacle.extends;
 
             // Calculate the distance between the centers of the rectangle and the circle
             let d = ball_position - obstacle_position;
@@ -67,6 +67,8 @@ pub fn bounce_ball_on_obstacles(
                 let collision = obstacle_position.xy() + closest;
                 ball_position = xy0(collision + (ball_position.xy() - collision));
                 ball.direction = xy0((ball_position.xy() - obstacle_position.xy()).normalize());
+
+                obstacle.hit_flag = true;
             }
             ball_transform.translation = ball_position;
         }
