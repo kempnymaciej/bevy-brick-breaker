@@ -29,6 +29,15 @@ fn random_direction_2d() -> Vec3 {
     Vec3::new(result_2d.x, result_2d.y, 0.0)
 }
 
+pub fn despawn_balls(
+    mut commands: Commands,
+    balls_query: Query<Entity, With<Ball>>
+) {
+    for ball in balls_query.iter() {
+        commands.entity(ball).despawn();
+    }
+}
+
 pub fn move_balls(
     mut balls_query: Query<(&mut Transform, &Ball)>,
     time: Res<Time>

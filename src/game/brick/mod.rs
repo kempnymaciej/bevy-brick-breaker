@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use systems::spawn_bricks;
-use crate::game::brick::systems::destroy_bricks_on_hit;
+use systems::*;
+use crate::AppState;
+use crate::game::InGameState;
 
 mod components;
 mod systems;
@@ -15,7 +16,9 @@ pub struct BrickPlugin;
 impl Plugin for BrickPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Startup, spawn_bricks)
-            .add_systems(Update, destroy_bricks_on_hit);
+            .add_systems(OnEnter(AppState::InGame), spawn_bricks)
+            .add_systems(Update, destroy_bricks_on_hit
+                .run_if(in_state(InGameState::Play)))
+            .add_systems(OnExit(AppState::InGame), despawn_bricks);
     }
 }

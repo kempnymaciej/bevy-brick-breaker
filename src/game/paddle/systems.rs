@@ -23,6 +23,15 @@ pub fn spawn_paddle(
         }));
 }
 
+pub fn despawn_paddle(
+    mut commands: Commands,
+    paddle_query: Query<Entity, With<Paddle>>
+) {
+    if let Ok(paddle) = paddle_query.get_single() {
+        commands.entity(paddle).despawn();
+    }
+}
+
 pub fn move_paddle(
     input: Res<Input<KeyCode>>,
     window_query: Query<&Window>,

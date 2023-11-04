@@ -1,14 +1,23 @@
 mod game;
 pub mod utility;
+mod menu;
 
 use bevy::prelude::*;
 use crate::game::GamePlugin;
+use crate::menu::MenuPlugin;
 
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+enum AppState {
+    #[default]
+    Menu,
+    InGame,
+}
 
 fn main() {
     App::new()
+        .add_state::<AppState>()
         .add_plugins(DefaultPlugins)
-        .add_plugins(GamePlugin)
+        .add_plugins((MenuPlugin, GamePlugin))
         .add_systems(Startup, spawn_camera)
         .run();
 }

@@ -32,6 +32,15 @@ pub fn spawn_bricks(
     }
 }
 
+pub fn despawn_bricks(
+    mut commands: Commands,
+    bricks_query: Query<Entity, With<Brick>>
+) {
+    for brick in bricks_query.iter() {
+        commands.entity(brick).despawn();
+    }
+}
+
 pub fn destroy_bricks_on_hit(
     mut commands: Commands,
     bricks_query: Query<(Entity, &BallObstacle), With<Brick>>
