@@ -1,7 +1,7 @@
 use bevy::math::{Vec3Swizzles};
 use bevy::prelude::*;
 use rand::prelude::*;
-use crate::utility;
+use crate::{utility, WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
 
 use super::{BALL_RADIUS, BALL_RADIUS_SQUARED, BALL_SPEED};
 use super::components::*;
@@ -9,13 +9,10 @@ use super::components::*;
 pub fn spawn_ball(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    window_query: Query<&Window>
 ) {
-    let window = window_query.get_single().unwrap();
-
     commands.spawn(
         (SpriteBundle {
-            transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
+            transform: Transform::from_xyz(WINDOW_USABLE_WORLD_WIDTH / 2.0, WINDOW_WORLD_HEIGHT / 2.0, 0.0),
             texture: asset_server.load("sprites/ballBlue.png"),
             .. default()
         },
@@ -85,14 +82,12 @@ pub fn bounce_ball_on_obstacles(
 }
 
 pub fn bounce_ball_on_edges(
-    window_query: Query<&Window>,
     mut balls_query: Query<(&mut Transform, &mut Ball)>,
 ) {
-    let window = window_query.get_single().unwrap();
     let min_x = BALL_RADIUS;
-    let max_x = window.width() - BALL_RADIUS;
+    let max_x = WINDOW_USABLE_WORLD_WIDTH - BALL_RADIUS;
     let min_y = BALL_RADIUS;
-    let max_y = window.height() - BALL_RADIUS;
+    let max_y = WINDOW_WORLD_HEIGHT - BALL_RADIUS;
 
     for (mut ball_transform, mut ball) in balls_query.iter_mut() {
         let mut ball_position = ball_transform.translation;

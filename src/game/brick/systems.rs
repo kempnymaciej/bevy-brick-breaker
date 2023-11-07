@@ -1,21 +1,19 @@
 use bevy::prelude::*;
 use crate::game::ball::components::BallObstacle;
 use crate::game::brick::components::Brick;
+use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
 use super::{BRICK_HALF_HEIGHT, BRICK_HALF_WIDTH, BRICK_HEIGHT, BRICK_WIDTH};
 
 pub fn spawn_bricks(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    window_query: Query<&Window>
 ) {
-    let window = window_query.get_single().unwrap();
-
-    let number_of_bricks_x = (window.width() / BRICK_WIDTH) as i32;
-    let x_space = window.width() / number_of_bricks_x as f32;
+    let number_of_bricks_x = (WINDOW_USABLE_WORLD_WIDTH / BRICK_WIDTH) as i32;
+    let x_space = WINDOW_USABLE_WORLD_WIDTH / number_of_bricks_x as f32;
     for y_index in 0..4 {
         for x_index in 0..number_of_bricks_x {
             let x = x_index as f32 * x_space + BRICK_HALF_WIDTH;
-            let y = window.height() - BRICK_HALF_HEIGHT - y_index as f32 * BRICK_HEIGHT;
+            let y = WINDOW_WORLD_HEIGHT - BRICK_HALF_HEIGHT - y_index as f32 * BRICK_HEIGHT;
             commands.spawn((
                 SpriteBundle {
                     transform: Transform::from_xyz(x, y, 0.0),

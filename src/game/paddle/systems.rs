@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::WINDOW_USABLE_WORLD_WIDTH;
 use super::{PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_SPEED, PADDLE_HALF_WIDTH, PADDLE_HALF_HEIGHT};
 use super::components::*;
 use super::super::ball::components::BallObstacle;
@@ -6,13 +7,10 @@ use super::super::ball::components::BallObstacle;
 pub fn spawn_paddle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    window_query: Query<&Window>
 ) {
-    let window = window_query.get_single().unwrap();
-
     commands.spawn(
         (SpriteBundle {
-            transform: Transform::from_xyz(window.width() / 2.0, PADDLE_HEIGHT / 2.0, 0.0),
+            transform: Transform::from_xyz(WINDOW_USABLE_WORLD_WIDTH / 2.0, PADDLE_HEIGHT / 2.0, 0.0),
             texture: asset_server.load("sprites/paddleBlue.png"),
             .. default()
         },
@@ -34,7 +32,6 @@ pub fn despawn_paddle(
 
 pub fn move_paddle(
     input: Res<Input<KeyCode>>,
-    window_query: Query<&Window>,
     mut paddle_query: Query<&mut Transform, With<Paddle>>,
     time: Res<Time>
 ) {
@@ -52,7 +49,7 @@ pub fn move_paddle(
             position.x += value * PADDLE_SPEED * time.delta_seconds();
 
             let min_x = PADDLE_WIDTH / 2.0;
-            let max_x = window_query.get_single().unwrap().width() - PADDLE_WIDTH / 2.0;
+            let max_x = WINDOW_USABLE_WORLD_WIDTH - PADDLE_WIDTH / 2.0;
             if position.x < min_x {
                 position.x = min_x;
             }

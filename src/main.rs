@@ -11,7 +11,8 @@ use crate::game::GamePlugin;
 use crate::menu::MenuPlugin;
 
 pub const WINDOW_WORLD_HEIGHT: f32 = 720.0;
-const MIN_WINDOW_WIDTH_TO_HEIGHT: f32 = 5.0 / 4.0;
+pub const WINDOW_USABLE_WORLD_WIDTH: f32 = 1280.0;
+const MIN_WINDOW_WIDTH_TO_HEIGHT: f32 = WINDOW_USABLE_WORLD_WIDTH / WINDOW_WORLD_HEIGHT;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
