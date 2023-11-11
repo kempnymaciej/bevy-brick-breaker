@@ -1,5 +1,4 @@
 mod game;
-pub mod utility;
 mod menu;
 mod common;
 
@@ -34,7 +33,8 @@ fn main() {
 fn spawn_camera(
     mut commands: Commands,
     window_query: Query<&Window>
-){
+)
+{
     let window = window_query.get_single().unwrap();
 
     commands.spawn(
@@ -54,7 +54,8 @@ fn spawn_camera(
 fn guard_resolution(
     mut window_query: Query<&mut Window>,
     mut resize_reader: EventReader<WindowResized>,
-) {
+)
+{
     for e in resize_reader.read() {
         if e.width / e.height < MIN_WINDOW_WIDTH_TO_HEIGHT {
             let mut window = window_query.get_single_mut().unwrap();

@@ -1,16 +1,66 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use crate::game::ball::components::CollisionType;
-use crate::game::shared::collider::BoxCollider;
+use super::collider::BoxCollider;
+use super::ball::{ BallObstacle, BallObstacleType };
 use crate::WINDOW_USABLE_WORLD_WIDTH;
-use super::{PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_SPEED, PADDLE_HALF_WIDTH, PADDLE_HALF_HEIGHT, PADDLE_WIDTH_PER_SIZE_POINT};
-use super::components::*;
-use super::super::ball::components::BallObstacle;
+
+pub const PADDLE_WIDTH: f32 = 104.0;
+pub const PADDLE_HALF_WIDTH: f32 = PADDLE_WIDTH / 2.0;
+pub const PADDLE_HEIGHT: f32 = 24.0;
+pub const PADDLE_HALF_HEIGHT: f32 = PADDLE_HEIGHT / 2.0;
+pub const PADDLE_SPEED: f32 = 700.0;
+pub const PADDLE_WIDTH_PER_SIZE_POINT: f32 = 32.0;
+
+pub enum PaddleSegmentType {
+    Center,
+    Left,
+    Right,
+}
+
+#[derive(Resource)]
+pub struct PaddleSize{
+    points: i32,
+    clamped_points: i32,
+}
+
+impl PaddleSize {
+    pub fn change_size(&mut self, delta_points: i32) {
+        self.points += delta_points;
+        self.clamped_points =
+            if self.points < 0 { 0 }
+            else if self.points > 12 { 12 }
+            else { self.points };
+    }
+
+    pub fn get_points(&self) -> i32 {
+        self.clamped_points
+    }
+
+    pub fn get_default_points() -> i32 {
+        3
+    }
+}
+
+impl Default for PaddleSize {
+    fn default() -> Self {
+        let default_points = Self::get_default_points();
+        PaddleSize { points: default_points, clamped_points: default_points }
+    }
+}
+
+#[derive(Component)]
+pub struct Paddle;
+
+#[derive(Component)]
+pub struct PaddleSegment {
+    pub segment_type: PaddleSegmentType
+}
 
 pub fn spawn_paddle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-) {
+)
+{
     let paddle_width = get_paddle_width(PaddleSize::get_default_points());
 
     commands.spawn((
@@ -19,10 +69,7 @@ pub fn spawn_paddle(
             local: Transform::from_xyz(WINDOW_USABLE_WORLD_WIDTH / 2.0, PADDLE_HEIGHT / 2.0, 0.0),
             ..default()
         },
-        BallObstacle {
-            hit_flag: false,
-            collision_type: CollisionType::Centric,
-        },
+        BallObstacle::new(BallObstacleType::Centric),
         BoxCollider {
             extends: Vec2::new(paddle_width / 2.0, PADDLE_HALF_HEIGHT),
         }))
@@ -58,8 +105,8 @@ pub fn spawn_paddle(
                     sprite: Sprite {
                         anchor: Anchor::CenterRight,
                         rect: Some(Rect {
-                           min: Vec2::new(0.,0.),
-                           max: Vec2::new(PADDLE_HALF_WIDTH, PADDLE_HEIGHT),
+                            min: Vec2::new(0.,0.),
+                            max: Vec2::new(PADDLE_HALF_WIDTH, PADDLE_HEIGHT),
                         }),
                         .. default()
                     },
@@ -94,12 +141,13 @@ pub fn spawn_paddle(
         });
 }
 
-pub fn despawn_paddle(
+pub fn despawn_paddles(
     mut commands: Commands,
-    paddle_query: Query<Entity, With<Paddle>>
-) {
-    if let Ok(paddle) = paddle_query.get_single() {
-        commands.entity(paddle).despawn();
+    paddles_query: Query<Entity, With<Paddle>>
+)
+{
+    for paddle in paddles_query.iter() {
+        commands.entity(paddle).despawn_recursive();
     }
 }
 
@@ -107,7 +155,8 @@ pub fn move_paddle(
     input: Res<Input<KeyCode>>,
     mut paddle_query: Query<(&mut Transform, &BoxCollider), With<Paddle>>,
     time: Res<Time>
-) {
+)
+{
     let mut value: f32 = 0.0;
     if input.pressed(KeyCode::Left) {
         value -= 1.0;
@@ -135,10 +184,11 @@ pub fn move_paddle(
     }
 }
 
-pub fn test_update_size(
+pub fn test_update_paddle_size(
     input: Res<Input<KeyCode>>,
     mut paddle_size: ResMut<PaddleSize>,
-) {
+)
+{
     if input.just_pressed(KeyCode::Q) {
         paddle_size.change_size(-1);
     }
@@ -151,7 +201,8 @@ pub fn update_paddle_size(
     paddle_size: Res<PaddleSize>,
     mut paddle_query: Query<&mut BoxCollider, With<Paddle>>,
     mut paddle_segments_query: Query<(&mut Transform, &PaddleSegment)>
-) {
+)
+{
     if paddle_size.is_changed() {
         let width = get_paddle_width(paddle_size.get_points());
 

@@ -25,12 +25,3 @@ fn notify_menu_enter() {
 fn notify_menu_exit() {
     println!("menu exited");
 }
-
-fn check_game_condition(
-    input: Res<Input<KeyCode>>,
-    mut next_state: ResMut<NextState<AppState>>
-) {
-    if input.just_pressed(KeyCode::G) {
-        next_state.set(AppState::InGame)
-    }
-}

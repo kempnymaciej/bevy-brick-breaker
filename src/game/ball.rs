@@ -1,17 +1,13 @@
 use bevy::prelude::*;
-use rand::prelude::*;
-use crate::{utility, WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
-use crate::game::shared::collider::BoxCollider;
-
-use crate::AppState;
-use crate::game::InGameState;
+use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
+use crate::game::collider::BoxCollider;
 
 pub const BALL_SIZE: f32 = 22.0;
 pub const BALL_RADIUS: f32 = BALL_SIZE / 2.0;
 pub const BALL_RADIUS_SQUARED: f32 = BALL_RADIUS * BALL_RADIUS;
-pub const BALL_SPEED: f32 = 800.0;
+pub const BALL_SPEED: f32 = 600.0;
 
-pub enum CollisionType {
+pub enum BallObstacleType {
     Natural,
     Centric,
 }
@@ -23,36 +19,46 @@ pub struct Ball {
 
 #[derive(Component)]
 pub struct BallObstacle {
-    pub collision_type: CollisionType,
-    pub hit_flag: bool
+    pub obstacle_type: BallObstacleType,
+    pub hit_flag: bool,
 }
 
-pub struct BallPlugin;
-
-impl Plugin for BallPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .add_systems(OnEnter(AppState::InGame), spawn_ball)
-            .add_systems(Update, (
-                move_balls,
-                bounce_ball_on_obstacles,
-                bounce_ball_on_edges).chain().run_if(in_state(InGameState::Play))
-            )
-            .add_systems(OnExit(AppState::InGame), despawn_balls);
+impl BallObstacle {
+    pub fn new(obstacle_type: BallObstacleType) -> Self {
+        BallObstacle {
+            obstacle_type,
+            hit_flag: false,
+        }
     }
 }
 
-fn spawn_ball(
+pub fn spawn_first_ball(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-) {
+)
+{
+    spawn_ball(
+        &mut commands,
+        &asset_server,
+        Vec2::new(WINDOW_USABLE_WORLD_WIDTH / 2.0, WINDOW_WORLD_HEIGHT / 2.0),
+        Vec2::new(0., 1.)
+    )
+}
+
+pub fn spawn_ball(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    position: Vec2,
+    direction: Vec2,
+)
+{
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_xyz(WINDOW_USABLE_WORLD_WIDTH / 2.0, WINDOW_WORLD_HEIGHT / 2.0, 0.0),
+            transform: Transform::from_xyz(position.x, position.y, 0.),
             texture: asset_server.load("sprites/ballBlue.png"),
             .. default()
         },
-        Ball { direction: random_direction_2d() }
+        Ball { direction: Vec3::new(direction.x, direction.y, 0.) }
     ));
 }
 
@@ -66,65 +72,94 @@ pub fn despawn_balls(
 }
 
 pub fn move_balls(
-    mut balls_query: Query<(&mut Transform, &Ball)>,
+    mut balls_query: Query<(&mut Transform, &mut Ball)>,
+    mut obstacle_query: Query<(&Transform, &BoxCollider, &mut BallObstacle), Without<Ball>>,
     time: Res<Time>
-) {
+)
+{
     for (mut ball_transform, ball) in balls_query.iter_mut() {
         ball_transform.translation += BALL_SPEED * time.delta_seconds() * ball.direction;
     }
+
+    bounce_ball_on_obstacles(&mut balls_query, &mut obstacle_query);
+    bounce_ball_on_edges(&mut balls_query);
 }
 
-pub fn bounce_ball_on_obstacles(
-    mut balls_query: Query<(&mut Transform, &mut Ball)>,
-    mut obstacle_query: Query<(&Transform, &BoxCollider, &mut BallObstacle), Without<Ball>>
-) {
-    for (mut ball_transform, mut ball) in balls_query.iter_mut() {
-        let mut ball_position = ball_transform.translation;
+fn bounce_ball_on_obstacles(
+    balls_query: &mut Query<(&mut Transform, &mut Ball)>,
+    obstacle_query: &mut Query<(&Transform, &BoxCollider, &mut BallObstacle), Without<Ball>>
+)
+{
+    for (ball_transform, mut ball) in balls_query.iter_mut() {
+        let ball_position = ball_transform.translation.xy();
+        let mut ball_flip_direction_x = false;
+        let mut ball_flip_direction_y = false;
+        let mut ball_override_direction: Option<Vec2> = None;
 
         for (obstacle_transform, obstacle_collider, mut obstacle) in obstacle_query.iter_mut() {
-            let obstacle_position = obstacle_transform.translation;
+            let obstacle_position = obstacle_transform.translation.xy();
             let obstacle_extends = obstacle_collider.extends;
 
-            // Calculate the distance between the centers of the rectangle and the circle
-            let d = ball_position - obstacle_position;
-
-            // Find the point on the rectangle closest to the circle
-            let closest = Vec2 {
-                x: utility::math::clamp(d.x, -obstacle_extends.x, obstacle_extends.x),
-                y: utility::math::clamp(d.y, -obstacle_extends.y, obstacle_extends.y),
+            let obstacle_to_ball = ball_position - obstacle_position;
+            let obstacle_to_closest = Vec2 {
+                x: obstacle_to_ball.x.clamp(-obstacle_extends.x, obstacle_extends.x),
+                y: obstacle_to_ball.y.clamp(-obstacle_extends.y, obstacle_extends.y),
             };
 
-            // Check if the distance between the circle's center and the closest point on the rectangle is less than or equal to the radius
-            let distance = (d.x - closest.x) * (d.x - closest.x) + (d.y - closest.y) * (d.y - closest.y);
-
-            if distance <= BALL_RADIUS_SQUARED
+            let potential_collision = obstacle_position + obstacle_to_closest;
+            if (potential_collision - ball_position).length_squared() <= BALL_RADIUS_SQUARED
             {
                 obstacle.hit_flag = true;
 
-                // Collision detected; calculate the collision point
-                let collision = obstacle_position.xy() + closest;
+                match obstacle.obstacle_type {
+                    BallObstacleType::Natural => {
+                        if ball_flip_direction_x && ball_flip_direction_y {
+                            continue;
+                        }
 
-                ball_position = xy0(collision + (ball_position.xy() - collision));
-                ball.direction = match obstacle.collision_type {
-                    CollisionType::Natural => {
-                        let reflection = bounce_ball_on_box(collision, obstacle_position.xy(), obstacle_extends);
-                        ball.direction.x *= reflection.x;
-                        ball.direction.y *= reflection.y;
-                        ball.direction
+                        let offset = 1.;
+
+                        if potential_collision.x > obstacle_position.x - obstacle_extends.x + offset
+                            && potential_collision.x < obstacle_position.x + obstacle_extends.x - offset
+                        {
+                            ball_flip_direction_y = true;
+                            continue;
+                        }
+                        if potential_collision.y > obstacle_position.y - obstacle_extends.y + offset
+                            && potential_collision.y < obstacle_position.y + obstacle_extends.y - offset
+                        {
+                            ball_flip_direction_x = true;
+                            continue;
+                        }
+
+                        ball_flip_direction_y = true;
+                        ball_flip_direction_x = true;
                     }
-                    CollisionType::Centric => {
-                        xy0((ball_position.xy() - obstacle_position.xy()).normalize())
+                    BallObstacleType::Centric => {
+                        ball_override_direction = Some(ball_position - obstacle_position);
+                        break;
                     }
                 };
             }
-            ball_transform.translation = ball_position;
+        }
+
+        if let Some(direction) = ball_override_direction {
+            ball.direction = xy0(direction.normalize());
+        }
+        else {
+            if ball_flip_direction_x {
+                ball.direction.x *= -1.;
+            }
+            if ball_flip_direction_y {
+                ball.direction.y *= -1.;
+            }
         }
     }
 }
 
 
-pub fn bounce_ball_on_edges(
-    mut balls_query: Query<(&mut Transform, &mut Ball)>,
+fn bounce_ball_on_edges(
+    balls_query: &mut Query<(&mut Transform, &mut Ball)>,
 ) {
     let min_x = BALL_RADIUS;
     let max_x = WINDOW_USABLE_WORLD_WIDTH - BALL_RADIUS;
@@ -155,24 +190,4 @@ pub fn bounce_ball_on_edges(
 
 fn xy0(xy: Vec2) -> Vec3 {
     Vec3 { x: xy.x, y: xy.y, z: 0.0 }
-}
-
-fn bounce_ball_on_box(ball_center: Vec2, box_center: Vec2, box_extends: Vec2) -> Vec2 {
-    let delta_center = ball_center - box_center;
-    let dx = delta_center.x.abs() - box_extends.x;
-    let dy = delta_center.y.abs() - box_extends.y;
-
-    if dx.abs() > dy.abs() {
-        Vec2::new(1.0, -1.0)
-    }
-    else {
-        Vec2::new(-1.0, 1.0)
-    }
-}
-
-fn random_direction_2d() -> Vec3 {
-    let rand = random();
-    let mut result_2d = Vec2::new(rand, 1.0 - rand);
-    result_2d = result_2d.normalize();
-    Vec3::new(result_2d.x, result_2d.y, 0.0)
 }

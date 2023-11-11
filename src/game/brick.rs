@@ -1,14 +1,22 @@
 use bevy::prelude::*;
-use crate::game::ball::components::{BallObstacle, CollisionType};
-use crate::game::brick::components::Brick;
+
+use super::ball::{BallObstacle, BallObstacleType};
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
-use crate::game::shared::collider::BoxCollider;
-use super::{BRICK_HALF_HEIGHT, BRICK_HALF_WIDTH, BRICK_HEIGHT, BRICK_WIDTH};
+use super::collider::BoxCollider;
+
+pub const BRICK_WIDTH: f32 = 64.0;
+pub const BRICK_HALF_WIDTH: f32 = BRICK_WIDTH / 2.0;
+pub const BRICK_HEIGHT: f32 = 32.0;
+pub const BRICK_HALF_HEIGHT: f32 = BRICK_HEIGHT / 2.0;
+
+#[derive(Component)]
+pub struct Brick;
 
 pub fn spawn_bricks(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-) {
+)
+{
     let number_of_bricks_x = (WINDOW_USABLE_WORLD_WIDTH / BRICK_WIDTH) as i32;
     let x_space = WINDOW_USABLE_WORLD_WIDTH / number_of_bricks_x as f32;
     for y_index in 0..4 {
@@ -22,10 +30,7 @@ pub fn spawn_bricks(
                     ..default()
                 },
                 Brick {},
-                BallObstacle {
-                    hit_flag: false,
-                    collision_type: CollisionType::Natural
-                },
+                BallObstacle::new(BallObstacleType::Natural),
                 BoxCollider {
                     extends: Vec2::new(BRICK_HALF_WIDTH, BRICK_HALF_HEIGHT),
                 }
@@ -37,7 +42,8 @@ pub fn spawn_bricks(
 pub fn despawn_bricks(
     mut commands: Commands,
     bricks_query: Query<Entity, With<Brick>>
-) {
+)
+{
     for brick in bricks_query.iter() {
         commands.entity(brick).despawn();
     }
@@ -46,10 +52,11 @@ pub fn despawn_bricks(
 pub fn destroy_bricks_on_hit(
     mut commands: Commands,
     bricks_query: Query<(Entity, &BallObstacle), With<Brick>>
-) {
-    for brick in bricks_query.iter() {
-        if brick.1.hit_flag == true {
-            commands.entity(brick.0).despawn();
+)
+{
+    for (entity, obstacle) in bricks_query.iter() {
+        if obstacle.hit_flag == true {
+            commands.entity(entity).despawn();
         }
     }
 }
