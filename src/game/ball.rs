@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
+use crate::game::BallHitGround;
 use crate::game::collider::BoxCollider;
 
 pub const BALL_SIZE: f32 = 22.0;
@@ -74,7 +75,8 @@ pub fn despawn_balls(
 pub fn move_balls(
     mut balls_query: Query<(&mut Transform, &mut Ball)>,
     mut obstacle_query: Query<(&Transform, &BoxCollider, &mut BallObstacle), Without<Ball>>,
-    time: Res<Time>
+    time: Res<Time>,
+    mut ball_hit_ground_events: EventWriter<BallHitGround>,
 )
 {
     for (mut ball_transform, ball) in balls_query.iter_mut() {
@@ -82,7 +84,7 @@ pub fn move_balls(
     }
 
     bounce_ball_on_obstacles(&mut balls_query, &mut obstacle_query);
-    bounce_ball_on_edges(&mut balls_query);
+    bounce_ball_on_edges(&mut balls_query, &mut ball_hit_ground_events);
 }
 
 fn bounce_ball_on_obstacles(
@@ -160,7 +162,9 @@ fn bounce_ball_on_obstacles(
 
 fn bounce_ball_on_edges(
     balls_query: &mut Query<(&mut Transform, &mut Ball)>,
-) {
+    ball_hit_ground_events: &mut EventWriter<BallHitGround>,
+)
+{
     let min_x = BALL_RADIUS;
     let max_x = WINDOW_USABLE_WORLD_WIDTH - BALL_RADIUS;
     let min_y = BALL_RADIUS;
@@ -179,6 +183,7 @@ fn bounce_ball_on_edges(
         if ball_position.y < min_y {
             ball_position.y = min_y;
             ball.direction.y *= -1.0;
+            ball_hit_ground_events.send_default();
         } else if ball_position.y > max_y {
             ball_position.y = max_y;
             ball.direction.y *= -1.0;

@@ -19,10 +19,14 @@ enum InGameState {
     Pause,
 }
 
+#[derive(Event, Default)]
+pub struct BallHitGround;
+
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_state::<InGameState>()
+            .add_event::<BallHitGround>()
             .insert_resource(PaddleSize::default())
             .add_systems(OnEnter(AppState::InGame),
                 (
@@ -38,7 +42,8 @@ impl Plugin for GamePlugin {
                          move_balls,
                          destroy_bricks_on_hit,
                          test_update_paddle_size,
-                         update_paddle_size
+                         update_paddle_size,
+                         check_end_game,
                      ).run_if(in_state(InGameState::Play)),
                      (
                          check_menu_condition,
@@ -53,6 +58,15 @@ impl Plugin for GamePlugin {
                      despawn_bricks,
                  )
             );
+    }
+}
+
+fn check_end_game(
+    mut ball_hit_ground: EventReader<BallHitGround>,
+)
+{
+    for _event in ball_hit_ground.read() {
+        println!("end");
     }
 }
 
