@@ -65,8 +65,8 @@ pub fn spawn_paddle(
 
     commands.spawn((
         Paddle,
-        TransformBundle {
-            local: Transform::from_xyz(WINDOW_USABLE_WORLD_WIDTH / 2.0, PADDLE_HEIGHT / 2.0, 0.0),
+        SpatialBundle {
+            transform: Transform::from_xyz(WINDOW_USABLE_WORLD_WIDTH / 2.0, PADDLE_HEIGHT / 2.0, 0.0),
             ..default()
         },
         BallObstacle::new(BallObstacleType::Centric),
