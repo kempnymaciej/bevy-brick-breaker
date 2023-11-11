@@ -10,7 +10,7 @@ use crate::game::InGameState;
 pub const BALL_SIZE: f32 = 22.0;
 pub const BALL_RADIUS: f32 = BALL_SIZE / 2.0;
 pub const BALL_RADIUS_SQUARED: f32 = BALL_RADIUS * BALL_RADIUS;
-pub const BALL_SPEED: f32 = 500.0;
+pub const BALL_SPEED: f32 = 800.0;
 
 pub struct BallPlugin;
 

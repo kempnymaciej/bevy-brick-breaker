@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
+use crate::game::ball::components::CollisionType;
+use crate::game::shared::collider::BoxCollider;
 use crate::WINDOW_USABLE_WORLD_WIDTH;
 use super::{PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_SPEED, PADDLE_HALF_WIDTH, PADDLE_HALF_HEIGHT, PADDLE_WIDTH_PER_SIZE_POINT};
 use super::components::*;
@@ -18,8 +20,11 @@ pub fn spawn_paddle(
             ..default()
         },
         BallObstacle {
+            hit_flag: false,
+            collision_type: CollisionType::Centric,
+        },
+        BoxCollider {
             extends: Vec2::new(paddle_width / 2.0, PADDLE_HALF_HEIGHT),
-            hit_flag: false
         }))
         .with_children(|builder| {
             builder.spawn((
@@ -100,7 +105,7 @@ pub fn despawn_paddle(
 
 pub fn move_paddle(
     input: Res<Input<KeyCode>>,
-    mut paddle_query: Query<(&mut Transform, &BallObstacle), With<Paddle>>,
+    mut paddle_query: Query<(&mut Transform, &BoxCollider), With<Paddle>>,
     time: Res<Time>
 ) {
     let mut value: f32 = 0.0;
@@ -144,7 +149,7 @@ pub fn test_update_size(
 
 pub fn update_paddle_size(
     paddle_size: Res<PaddleSize>,
-    mut paddle_query: Query<&mut BallObstacle, With<Paddle>>,
+    mut paddle_query: Query<&mut BoxCollider, With<Paddle>>,
     mut paddle_segments_query: Query<(&mut Transform, &PaddleSegment)>
 ) {
     if paddle_size.is_changed() {

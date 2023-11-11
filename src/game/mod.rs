@@ -3,6 +3,7 @@ use bevy::prelude::*;
 mod paddle;
 mod ball;
 mod brick;
+mod shared;
 
 use paddle::PaddlePlugin;
 use ball::BallPlugin;

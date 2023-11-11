@@ -1,23 +1,59 @@
-use bevy::math::{Vec3Swizzles};
 use bevy::prelude::*;
 use rand::prelude::*;
 use crate::{utility, WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
 use crate::game::shared::collider::BoxCollider;
 
-use super::{BALL_RADIUS, BALL_RADIUS_SQUARED, BALL_SPEED};
-use super::components::*;
+use crate::AppState;
+use crate::game::InGameState;
 
-pub fn spawn_ball(
+pub const BALL_SIZE: f32 = 22.0;
+pub const BALL_RADIUS: f32 = BALL_SIZE / 2.0;
+pub const BALL_RADIUS_SQUARED: f32 = BALL_RADIUS * BALL_RADIUS;
+pub const BALL_SPEED: f32 = 800.0;
+
+pub enum CollisionType {
+    Natural,
+    Centric,
+}
+
+#[derive(Component)]
+pub struct Ball {
+    pub direction: Vec3,
+}
+
+#[derive(Component)]
+pub struct BallObstacle {
+    pub collision_type: CollisionType,
+    pub hit_flag: bool
+}
+
+pub struct BallPlugin;
+
+impl Plugin for BallPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_systems(OnEnter(AppState::InGame), spawn_ball)
+            .add_systems(Update, (
+                move_balls,
+                bounce_ball_on_obstacles,
+                bounce_ball_on_edges).chain().run_if(in_state(InGameState::Play))
+            )
+            .add_systems(OnExit(AppState::InGame), despawn_balls);
+    }
+}
+
+fn spawn_ball(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    commands.spawn(
-        (SpriteBundle {
+    commands.spawn((
+        SpriteBundle {
             transform: Transform::from_xyz(WINDOW_USABLE_WORLD_WIDTH / 2.0, WINDOW_WORLD_HEIGHT / 2.0, 0.0),
             texture: asset_server.load("sprites/ballBlue.png"),
             .. default()
         },
-        Ball { direction: random_direction_2d() }));
+        Ball { direction: random_direction_2d() }
+    ));
 }
 
 pub fn despawn_balls(

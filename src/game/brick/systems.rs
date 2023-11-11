@@ -1,7 +1,8 @@
 use bevy::prelude::*;
-use crate::game::ball::components::BallObstacle;
+use crate::game::ball::components::{BallObstacle, CollisionType};
 use crate::game::brick::components::Brick;
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
+use crate::game::shared::collider::BoxCollider;
 use super::{BRICK_HALF_HEIGHT, BRICK_HALF_WIDTH, BRICK_HEIGHT, BRICK_WIDTH};
 
 pub fn spawn_bricks(
@@ -22,8 +23,11 @@ pub fn spawn_bricks(
                 },
                 Brick {},
                 BallObstacle {
+                    hit_flag: false,
+                    collision_type: CollisionType::Natural
+                },
+                BoxCollider {
                     extends: Vec2::new(BRICK_HALF_WIDTH, BRICK_HALF_HEIGHT),
-                    hit_flag: false
                 }
             ));
         }
