@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
+use crate::game::ball::{Ball, BALL_RADIUS};
 use super::collider::BoxCollider;
 use super::ball::{ BallObstacle, BallObstacleType };
 use crate::WINDOW_USABLE_WORLD_WIDTH;
@@ -180,6 +181,22 @@ pub fn move_paddle(
                 position.x = max_x;
             }
             transform.translation = position;
+        }
+    }
+}
+
+pub fn keep_ball_at_paddle_center (
+    paddle_query: Query<(&Transform, &BoxCollider), With<Paddle>>,
+    mut ball_query: Query<&mut Transform, (With<Ball>, Without<Paddle>)>
+)
+{
+    if let Ok((paddle_transform, paddle_collider)) = paddle_query.get_single() {
+        for mut ball in ball_query.iter_mut() {
+            ball.translation = Vec3 {
+                x: paddle_transform.translation.x,
+                y: paddle_transform.translation.y + paddle_collider.extends.y + BALL_RADIUS,
+                z: 0.,
+            }
         }
     }
 }

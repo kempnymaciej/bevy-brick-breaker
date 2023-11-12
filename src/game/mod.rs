@@ -9,14 +9,17 @@ use crate::{AppState};
 use paddle::{ PaddleSize, despawn_paddles, spawn_paddle, move_paddle, update_paddle_size, test_update_paddle_size };
 use ball::{ spawn_first_ball, move_balls, despawn_balls };
 use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
+use crate::game::paddle::keep_ball_at_paddle_center;
 
 pub struct GamePlugin;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum InGameState {
     #[default]
+    Preparation,
     Play,
     Pause,
+    Summary,
 }
 
 #[derive(Event, Default)]
@@ -37,6 +40,10 @@ impl Plugin for GamePlugin {
             )
             .add_systems(Update,
                  (
+                     (
+                         move_paddle,
+                         keep_ball_at_paddle_center,
+                     ).chain().run_if(in_state(InGameState::Preparation)),
                      (
                          move_paddle,
                          move_balls,
