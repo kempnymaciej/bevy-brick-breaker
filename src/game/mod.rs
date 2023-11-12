@@ -41,9 +41,9 @@ impl Plugin for GamePlugin {
             .add_systems(Update,
                  (
                      (
-                         move_paddle,
-                         keep_ball_at_paddle_center,
-                     ).chain().run_if(in_state(InGameState::Preparation)),
+                         (move_paddle, keep_ball_at_paddle_center).chain(),
+                         check_preparation_end_condition,
+                     ).run_if(in_state(InGameState::Preparation)),
                      (
                          move_paddle,
                          move_balls,
@@ -65,6 +65,22 @@ impl Plugin for GamePlugin {
                      despawn_bricks,
                  )
             );
+    }
+}
+
+fn check_preparation_end_condition(
+    keyboard_input: Res<Input<KeyCode>>,
+    mouse_input: Res<Input<MouseButton>>,
+    mut next_state: ResMut<NextState<InGameState>>,
+)
+{
+    if let Some(key) = keyboard_input.get_just_pressed().next() {
+        if *key != KeyCode::Left && *key != KeyCode::Right {
+            next_state.set(InGameState::Play);
+        }
+    }
+    else if mouse_input.get_just_pressed().next() != None {
+        next_state.set(InGameState::Play);
     }
 }
 
