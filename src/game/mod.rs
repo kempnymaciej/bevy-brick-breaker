@@ -5,6 +5,7 @@ mod paddle;
 pub mod settings;
 mod shared;
 pub mod events;
+mod collectable;
 
 use bevy::prelude::*;
 use crate::{AppState};
@@ -14,6 +15,7 @@ use ball::{ spawn_first_ball, move_balls, despawn_balls };
 use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
 use crate::game::ball::keep_ball_synced_with_settings;
 use crate::game::events::{BallHitGround, BrickDestroyed};
+use crate::game::collectable::{despawn_collectables, keep_despawning_collectables, keep_spawning_collectables, move_collectables};
 use crate::game::settings::{BallSettings, PaddleSettings};
 use crate::game::shared::keep_ball_at_paddle_center;
 
@@ -56,6 +58,10 @@ impl Plugin for GamePlugin {
                          test_settings,
                          keep_ball_synced_with_settings,
                          keep_paddle_synced_with_settings,
+                         keep_spawning_collectables,
+                         move_collectables,
+                         keep_despawning_collectables,
+                         move_collectables,
                          check_end_game,
                      ).run_if(in_state(InGameState::Play)),
                      (
@@ -69,6 +75,7 @@ impl Plugin for GamePlugin {
                      despawn_balls,
                      despawn_paddles,
                      despawn_bricks,
+                     despawn_collectables,
                      reset_resources,
                  )
             );
