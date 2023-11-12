@@ -20,3 +20,7 @@ pub fn keep_ball_at_paddle_center (
         }
     }
 }
+
+pub fn xy0(xy: Vec2) -> Vec3 {
+    Vec3 { x: xy.x, y: xy.y, z: 0.0 }
+}

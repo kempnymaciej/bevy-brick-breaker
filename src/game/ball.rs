@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
+use crate::game::shared::xy0;
 use super::BallHitGround;
 use super::collider::BoxCollider;
 use super::settings::BallSettings;
@@ -217,8 +218,4 @@ fn bounce_ball_on_edges(
 
         ball_transform.translation = ball_position;
     }
-}
-
-fn xy0(xy: Vec2) -> Vec3 {
-    Vec3 { x: xy.x, y: xy.y, z: 0.0 }
 }
