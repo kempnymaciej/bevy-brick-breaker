@@ -2,14 +2,18 @@ pub mod ball;
 pub mod collider;
 mod brick;
 mod paddle;
+pub mod settings;
+mod shared;
 
 use bevy::prelude::*;
 use crate::{AppState};
 
-use paddle::{ PaddleSize, despawn_paddles, spawn_paddle, move_paddle, update_paddle_size, test_update_paddle_size };
+use paddle::{despawn_paddles, spawn_paddle, move_paddle, keep_paddle_synced_with_settings};
 use ball::{ spawn_first_ball, move_balls, despawn_balls };
 use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
-use crate::game::paddle::keep_ball_at_paddle_center;
+use crate::game::ball::keep_ball_synced_with_settings;
+use crate::game::settings::{BallSettings, PaddleSettings};
+use crate::game::shared::keep_ball_at_paddle_center;
 
 pub struct GamePlugin;
 
@@ -30,7 +34,8 @@ impl Plugin for GamePlugin {
         app
             .add_state::<InGameState>()
             .add_event::<BallHitGround>()
-            .insert_resource(PaddleSize::default())
+            .insert_resource(PaddleSettings::default())
+            .insert_resource(BallSettings::default())
             .add_systems(OnEnter(AppState::InGame),
                 (
                     spawn_first_ball,
@@ -48,8 +53,9 @@ impl Plugin for GamePlugin {
                          move_paddle,
                          move_balls,
                          destroy_bricks_on_hit,
-                         test_update_paddle_size,
-                         update_paddle_size,
+                         test_settings,
+                         keep_ball_synced_with_settings,
+                         keep_paddle_synced_with_settings,
                          check_end_game,
                      ).run_if(in_state(InGameState::Play)),
                      (
@@ -115,5 +121,34 @@ fn toggle_pause(
         else {
             next_state.set(InGameState::Play);
         }
+    }
+}
+
+pub fn test_settings(
+    input: Res<Input<KeyCode>>,
+    mut paddle_settings: ResMut<PaddleSettings>,
+    mut ball_settings: ResMut<BallSettings>,
+)
+{
+    let value =
+        if input.just_pressed(KeyCode::Q) { -1 }
+        else if input.just_pressed(KeyCode::E) { 1 }
+        else { 0 };
+
+    if value == 0 {
+        return;
+    }
+
+    if input.pressed(KeyCode::Key1) {
+        paddle_settings.change_size_points(value);
+    }
+    if input.pressed(KeyCode::Key2) {
+        paddle_settings.change_speed_points(value);
+    }
+    if input.pressed(KeyCode::Key3) {
+        ball_settings.change_size_points(value);
+    }
+    if input.pressed(KeyCode::Key4) {
+        ball_settings.change_speed_points(value);
     }
 }

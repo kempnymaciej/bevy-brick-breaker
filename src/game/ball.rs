@@ -1,12 +1,10 @@
 use bevy::prelude::*;
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
-use crate::game::BallHitGround;
-use crate::game::collider::BoxCollider;
+use super::BallHitGround;
+use super::collider::BoxCollider;
+use super::settings::BallSettings;
 
 pub const BALL_SIZE: f32 = 22.0;
-pub const BALL_RADIUS: f32 = BALL_SIZE / 2.0;
-pub const BALL_RADIUS_SQUARED: f32 = BALL_RADIUS * BALL_RADIUS;
-pub const BALL_SPEED: f32 = 600.0;
 
 pub enum BallObstacleType {
     Natural,
@@ -36,13 +34,15 @@ impl BallObstacle {
 pub fn spawn_first_ball(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    ball_settings: Res<BallSettings>,
 )
 {
     spawn_ball(
         &mut commands,
         &asset_server,
         Vec2::new(WINDOW_USABLE_WORLD_WIDTH / 2.0, WINDOW_WORLD_HEIGHT / 2.0),
-        Vec2::new(0., 1.)
+        Vec2::new(0., 1.),
+        &ball_settings,
     )
 }
 
@@ -51,11 +51,16 @@ pub fn spawn_ball(
     asset_server: &Res<AssetServer>,
     position: Vec2,
     direction: Vec2,
+    ball_settings: &BallSettings,
 )
 {
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_xyz(position.x, position.y, 0.),
+            transform: Transform{
+                translation: Vec3::new(position.x, position.y, 0.),
+                scale: ball_settings.get_scale3(),
+                ..default()
+            },
             texture: asset_server.load("sprites/ballBlue.png"),
             .. default()
         },
@@ -72,26 +77,46 @@ pub fn despawn_balls(
     }
 }
 
+pub fn keep_ball_synced_with_settings(
+    ball_settings: Res<BallSettings>,
+    mut ball_query: Query<&mut Transform, With<Ball>>
+)
+{
+    if ball_settings.is_changed() {
+        let ball_scale = ball_settings.get_scale3();
+
+        for mut ball_transform in ball_query.iter_mut() {
+            ball_transform.scale = ball_scale;
+        }
+    }
+}
+
 pub fn move_balls(
     mut balls_query: Query<(&mut Transform, &mut Ball)>,
     mut obstacle_query: Query<(&Transform, &BoxCollider, &mut BallObstacle), Without<Ball>>,
     time: Res<Time>,
+    ball_settings: Res<BallSettings>,
     mut ball_hit_ground_events: EventWriter<BallHitGround>,
 )
 {
+    let ball_speed = ball_settings.get_speed();
     for (mut ball_transform, ball) in balls_query.iter_mut() {
-        ball_transform.translation += BALL_SPEED * time.delta_seconds() * ball.direction;
+        ball_transform.translation += ball_speed * time.delta_seconds() * ball.direction;
     }
 
-    bounce_ball_on_obstacles(&mut balls_query, &mut obstacle_query);
-    bounce_ball_on_edges(&mut balls_query, &mut ball_hit_ground_events);
+    let ball_radius = ball_settings.get_radius();
+    bounce_ball_on_obstacles(ball_radius, &mut balls_query, &mut obstacle_query);
+    bounce_ball_on_edges(ball_radius, &mut balls_query, &mut ball_hit_ground_events);
 }
 
 fn bounce_ball_on_obstacles(
+    ball_radius: f32,
     balls_query: &mut Query<(&mut Transform, &mut Ball)>,
     obstacle_query: &mut Query<(&Transform, &BoxCollider, &mut BallObstacle), Without<Ball>>
 )
 {
+    let ball_radius_squared = ball_radius * ball_radius;
+
     for (ball_transform, mut ball) in balls_query.iter_mut() {
         let ball_position = ball_transform.translation.xy();
         let mut ball_flip_direction_x = false;
@@ -109,7 +134,7 @@ fn bounce_ball_on_obstacles(
             };
 
             let potential_collision = obstacle_position + obstacle_to_closest;
-            if (potential_collision - ball_position).length_squared() <= BALL_RADIUS_SQUARED
+            if (potential_collision - ball_position).length_squared() <= ball_radius_squared
             {
                 obstacle.hit_flag = true;
 
@@ -161,14 +186,15 @@ fn bounce_ball_on_obstacles(
 
 
 fn bounce_ball_on_edges(
+    ball_radius: f32,
     balls_query: &mut Query<(&mut Transform, &mut Ball)>,
     ball_hit_ground_events: &mut EventWriter<BallHitGround>,
 )
 {
-    let min_x = BALL_RADIUS;
-    let max_x = WINDOW_USABLE_WORLD_WIDTH - BALL_RADIUS;
-    let min_y = BALL_RADIUS;
-    let max_y = WINDOW_WORLD_HEIGHT - BALL_RADIUS;
+    let min_x = ball_radius;
+    let max_x = WINDOW_USABLE_WORLD_WIDTH - ball_radius;
+    let min_y = ball_radius;
+    let max_y = WINDOW_WORLD_HEIGHT - ball_radius;
 
     for (mut ball_transform, mut ball) in balls_query.iter_mut() {
         let mut ball_position = ball_transform.translation;

@@ -1,52 +1,19 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use crate::game::ball::{Ball, BALL_RADIUS};
+use super::settings::PaddleSettings;
 use super::collider::BoxCollider;
 use super::ball::{ BallObstacle, BallObstacleType };
 use crate::WINDOW_USABLE_WORLD_WIDTH;
 
 pub const PADDLE_WIDTH: f32 = 104.0;
-pub const PADDLE_HALF_WIDTH: f32 = PADDLE_WIDTH / 2.0;
+const PADDLE_HALF_WIDTH: f32 = PADDLE_WIDTH / 2.0;
 pub const PADDLE_HEIGHT: f32 = 24.0;
-pub const PADDLE_HALF_HEIGHT: f32 = PADDLE_HEIGHT / 2.0;
-pub const PADDLE_SPEED: f32 = 700.0;
-pub const PADDLE_WIDTH_PER_SIZE_POINT: f32 = 32.0;
+const PADDLE_HALF_HEIGHT: f32 = PADDLE_HEIGHT / 2.0;
 
 pub enum PaddleSegmentType {
     Center,
     Left,
     Right,
-}
-
-#[derive(Resource)]
-pub struct PaddleSize{
-    points: i32,
-    clamped_points: i32,
-}
-
-impl PaddleSize {
-    pub fn change_size(&mut self, delta_points: i32) {
-        self.points += delta_points;
-        self.clamped_points =
-            if self.points < 0 { 0 }
-            else if self.points > 12 { 12 }
-            else { self.points };
-    }
-
-    pub fn get_points(&self) -> i32 {
-        self.clamped_points
-    }
-
-    pub fn get_default_points() -> i32 {
-        3
-    }
-}
-
-impl Default for PaddleSize {
-    fn default() -> Self {
-        let default_points = Self::get_default_points();
-        PaddleSize { points: default_points, clamped_points: default_points }
-    }
 }
 
 #[derive(Component)]
@@ -60,9 +27,10 @@ pub struct PaddleSegment {
 pub fn spawn_paddle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    paddle_settings: Res<PaddleSettings>,
 )
 {
-    let paddle_width = get_paddle_width(PaddleSize::get_default_points());
+    let paddle_width = paddle_settings.get_width();
 
     commands.spawn((
         Paddle,
@@ -155,7 +123,8 @@ pub fn despawn_paddles(
 pub fn move_paddle(
     input: Res<Input<KeyCode>>,
     mut paddle_query: Query<(&mut Transform, &BoxCollider), With<Paddle>>,
-    time: Res<Time>
+    time: Res<Time>,
+    paddle_settings: Res<PaddleSettings>,
 )
 {
     let mut value: f32 = 0.0;
@@ -169,7 +138,7 @@ pub fn move_paddle(
     if value != 0.0 {
         if let Ok((mut transform, obstacle)) = paddle_query.get_single_mut() {
             let mut position = transform.translation;
-            position.x += value * PADDLE_SPEED * time.delta_seconds();
+            position.x += value * paddle_settings.get_speed() * time.delta_seconds();
 
             let paddle_half_width = obstacle.extends.x;
             let min_x = paddle_half_width;
@@ -185,43 +154,14 @@ pub fn move_paddle(
     }
 }
 
-pub fn keep_ball_at_paddle_center (
-    paddle_query: Query<(&Transform, &BoxCollider), With<Paddle>>,
-    mut ball_query: Query<&mut Transform, (With<Ball>, Without<Paddle>)>
-)
-{
-    if let Ok((paddle_transform, paddle_collider)) = paddle_query.get_single() {
-        for mut ball in ball_query.iter_mut() {
-            ball.translation = Vec3 {
-                x: paddle_transform.translation.x,
-                y: paddle_transform.translation.y + paddle_collider.extends.y + BALL_RADIUS,
-                z: 0.,
-            }
-        }
-    }
-}
-
-pub fn test_update_paddle_size(
-    input: Res<Input<KeyCode>>,
-    mut paddle_size: ResMut<PaddleSize>,
-)
-{
-    if input.just_pressed(KeyCode::Q) {
-        paddle_size.change_size(-1);
-    }
-    else if input.just_pressed(KeyCode::E) {
-        paddle_size.change_size(1);
-    }
-}
-
-pub fn update_paddle_size(
-    paddle_size: Res<PaddleSize>,
+pub fn keep_paddle_synced_with_settings(
+    paddle_settings: Res<PaddleSettings>,
     mut paddle_query: Query<&mut BoxCollider, With<Paddle>>,
     mut paddle_segments_query: Query<(&mut Transform, &PaddleSegment)>
 )
 {
-    if paddle_size.is_changed() {
-        let width = get_paddle_width(paddle_size.get_points());
+    if paddle_settings.is_changed() {
+        let width = paddle_settings.get_width();
 
         if let Ok(mut obstacle) = paddle_query.get_single_mut(){
             obstacle.extends = Vec2::new(width / 2.0, PADDLE_HALF_HEIGHT);
@@ -241,10 +181,6 @@ pub fn update_paddle_size(
             }
         }
     }
-}
-
-fn get_paddle_width(size_points: i32) -> f32 {
-    PADDLE_WIDTH + size_points as f32 * PADDLE_WIDTH_PER_SIZE_POINT
 }
 
 fn get_center_paddle_segment_local_scale(width: f32) -> Vec3 {
