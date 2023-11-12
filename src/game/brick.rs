@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use super::ball::{BallObstacle, BallObstacleType};
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
+use crate::game::events::BrickDestroyed;
 use super::collider::BoxCollider;
 
 pub const BRICK_WIDTH: f32 = 64.0;
@@ -51,12 +52,14 @@ pub fn despawn_bricks(
 
 pub fn destroy_bricks_on_hit(
     mut commands: Commands,
-    bricks_query: Query<(Entity, &BallObstacle), With<Brick>>
+    bricks_query: Query<(Entity, &BallObstacle, &Transform), With<Brick>>,
+    mut brick_destroyed_events: EventWriter<BrickDestroyed>,
 )
 {
-    for (entity, obstacle) in bricks_query.iter() {
+    for (entity, obstacle, transform) in bricks_query.iter() {
         if obstacle.hit_flag == true {
             commands.entity(entity).despawn();
+            brick_destroyed_events.send(BrickDestroyed { brick_position: transform.translation.xy()});
         }
     }
 }

@@ -4,6 +4,7 @@ mod brick;
 mod paddle;
 pub mod settings;
 mod shared;
+pub mod events;
 
 use bevy::prelude::*;
 use crate::{AppState};
@@ -12,6 +13,7 @@ use paddle::{despawn_paddles, spawn_paddle, move_paddle, keep_paddle_synced_with
 use ball::{ spawn_first_ball, move_balls, despawn_balls };
 use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
 use crate::game::ball::keep_ball_synced_with_settings;
+use crate::game::events::{BallHitGround, BrickDestroyed};
 use crate::game::settings::{BallSettings, PaddleSettings};
 use crate::game::shared::keep_ball_at_paddle_center;
 
@@ -26,9 +28,6 @@ enum InGameState {
     Summary,
 }
 
-#[derive(Event, Default)]
-pub struct BallHitGround;
-
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app
@@ -36,6 +35,7 @@ impl Plugin for GamePlugin {
             .init_resource::<BallSettings>()
             .init_resource::<PaddleSettings>()
             .add_event::<BallHitGround>()
+            .add_event::<BrickDestroyed>()
             .add_systems(OnEnter(AppState::InGame),
                 (
                     spawn_first_ball,
