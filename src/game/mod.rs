@@ -33,9 +33,9 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_state::<InGameState>()
+            .init_resource::<BallSettings>()
+            .init_resource::<PaddleSettings>()
             .add_event::<BallHitGround>()
-            .insert_resource(PaddleSettings::default())
-            .insert_resource(BallSettings::default())
             .add_systems(OnEnter(AppState::InGame),
                 (
                     spawn_first_ball,
@@ -69,9 +69,18 @@ impl Plugin for GamePlugin {
                      despawn_balls,
                      despawn_paddles,
                      despawn_bricks,
+                     reset_resources,
                  )
             );
     }
+}
+
+fn reset_resources(
+    mut commands: Commands
+)
+{
+    commands.insert_resource(PaddleSettings::default());
+    commands.insert_resource(BallSettings::default());
 }
 
 fn check_preparation_end_condition(
