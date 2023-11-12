@@ -17,7 +17,7 @@ use crate::game::ball::keep_ball_synced_with_settings;
 use crate::game::events::{BallHitGround, BrickDestroyed};
 use crate::game::collectable::{despawn_collectables, keep_despawning_collectables, keep_spawning_collectables, move_collectables};
 use crate::game::settings::{BallSettings, PaddleSettings};
-use crate::game::shared::keep_ball_at_paddle_center;
+use crate::game::shared::{collect_collectables, keep_ball_at_paddle_center};
 
 pub struct GamePlugin;
 
@@ -61,7 +61,7 @@ impl Plugin for GamePlugin {
                          keep_spawning_collectables,
                          move_collectables,
                          keep_despawning_collectables,
-                         move_collectables,
+                         collect_collectables,
                          check_end_game,
                      ).run_if(in_state(InGameState::Play)),
                      (

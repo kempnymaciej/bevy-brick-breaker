@@ -1,14 +1,46 @@
 use bevy::prelude::*;
 use rand::prelude::random;
 use crate::game::collider::BoxCollider;
-use crate::game::events::BrickDestroyed;
-use crate::game::paddle::Paddle;
+use crate::game::events::{BrickDestroyed};
 
 const COLLECTABLE_WIDTH: f32 = 148.;
 const COLLECTABLE_HEIGHT: f32 = 148.;
 
+#[derive(Clone, Copy)]
+pub enum CollectableType {
+    PaddleSizeUp,
+    PaddleSizeDown,
+    PaddleSpeedUp,
+    PaddleSpeedDown,
+    BallSizeUp,
+    BallSizeDown,
+    BallSpeedUp,
+    BallSpeedDown,
+}
+
 #[derive(Component)]
-pub struct Collectable;
+pub struct Collectable {
+    pub collectable_type: CollectableType,
+}
+
+impl Collectable {
+    const COLLECTABLE_TYPES: &'static [CollectableType] = &[
+        CollectableType::PaddleSizeUp,
+        CollectableType::PaddleSizeDown,
+        CollectableType::PaddleSpeedUp,
+        CollectableType::PaddleSpeedDown,
+        CollectableType::BallSizeUp,
+        CollectableType::BallSizeDown,
+        CollectableType::BallSpeedUp,
+        CollectableType::BallSpeedDown,
+    ];
+
+    pub fn random() -> Self {
+        Self {
+            collectable_type: Self::COLLECTABLE_TYPES[random::<usize>() % Self::COLLECTABLE_TYPES.len()]
+        }
+    }
+}
 
 #[derive(Component)]
 pub struct Spark {
@@ -88,7 +120,7 @@ pub fn keep_spawning_collectables(
                     extends: scale * Vec2::new(COLLECTABLE_WIDTH / 2., COLLECTABLE_HEIGHT / 2.),
                 },
                 Spark::random(),
-                Collectable {},
+                Collectable::random(),
             )
         );
     }
@@ -107,25 +139,12 @@ pub fn move_collectables(
 
 pub fn keep_despawning_collectables(
     mut commands: Commands,
-    collectable_query: Query<(Entity, &Transform, &BoxCollider), With<Collectable>>,
-    paddle_query: Query<(&Transform, &BoxCollider), With<Paddle>>
+    collectable_query: Query<(Entity, &Transform, &BoxCollider)>,
 )
 {
-    if let Ok((paddle_transform, paddle_collider)) = paddle_query.get_single() {
-        for (entity, transform, collider) in collectable_query.iter() {
-            let overlap = BoxCollider::overlap(
-                paddle_transform.translation.xy(), paddle_collider.extends,
-                transform.translation.xy(), collider.extends,
-            );
-
-            if overlap {
-                commands.entity(entity).despawn();
-            }
-
-            if transform.translation.y + collider.extends.y < 0. {
-                commands.entity(entity).despawn();
-            }
+    for (entity, transform, collider) in collectable_query.iter() {
+        if transform.translation.y + collider.extends.y < 0. {
+            commands.entity(entity).despawn();
         }
     }
 }
-
