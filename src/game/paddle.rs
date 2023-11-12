@@ -184,7 +184,7 @@ pub fn keep_paddle_synced_with_settings(
 }
 
 fn get_center_paddle_segment_local_scale(width: f32) -> Vec3 {
-    Vec3::new((width - PADDLE_WIDTH) / PADDLE_HALF_WIDTH, 1., 1.)
+    Vec3::new((width - PADDLE_WIDTH).max(0.) / PADDLE_HALF_WIDTH, 1., 1.)
 }
 
 fn get_left_paddle_segment_local_position(width: f32) -> Vec3 {
