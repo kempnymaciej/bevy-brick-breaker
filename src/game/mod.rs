@@ -6,7 +6,6 @@ pub mod settings;
 mod shared;
 pub mod events;
 mod collectable;
-mod particle;
 mod spark;
 
 use bevy::prelude::*;

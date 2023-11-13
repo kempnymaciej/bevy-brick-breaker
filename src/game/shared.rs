@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::game::collectable::{Collectable, CollectableType};
-use super::settings::{BallSize, BallSpeed, PaddleSize, PaddleSpeed};
-use super::ball::Ball;
+use super::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed};
+use super::ball::{Ball, spawn_ball};
 use super::collider::BoxCollider;
 use super::paddle::Paddle;
 
@@ -26,10 +26,13 @@ pub fn collect_collectables(
     mut commands: Commands,
     collectable_query: Query<(Entity, &Transform, &BoxCollider, &Collectable)>,
     paddle_query: Query<(&Transform, &BoxCollider), With<Paddle>>,
+    ball_query: Query<(&Ball, &Transform)>,
     mut ball_size: ResMut<BallSize>,
     mut ball_speed: ResMut<BallSpeed>,
     mut paddle_size: ResMut<PaddleSize>,
     mut paddle_speed: ResMut<PaddleSpeed>,
+    mut brick_ghost: ResMut<BrickGhost>,
+    asset_server: Res<AssetServer>,
 )
 {
     if let Ok((paddle_transform, paddle_collider)) = paddle_query.get_single() {
@@ -40,46 +43,50 @@ pub fn collect_collectables(
             );
 
             if overlap {
-                collect_collectable(&collectable.collectable_type,
-                    &mut ball_size, &mut ball_speed, &mut paddle_size, &mut paddle_speed);
+                match collectable.collectable_type {
+                    CollectableType::BallClone => {
+                        for (ball, ball_transform) in ball_query.iter() {
+                            spawn_ball(&mut commands, &asset_server,
+                                ball_transform.translation.xy(), -ball.direction.xy(), &ball_size);
+                        }
+                    }
+                    CollectableType::BallSizeUp => {
+                        ball_size.change_points(1);
+                    }
+                    CollectableType::BallSizeDown => {
+                        ball_size.change_points(-1);
+                    }
+                    CollectableType::BallSpeedUp => {
+                        ball_speed.change_points(1);
+                    }
+                    CollectableType::BallSpeedDown => {
+                        ball_speed.change_points(-1);
+                    }
+                    CollectableType::Coin => {
+
+                    }
+                    CollectableType::GhostUp => {
+                        brick_ghost.set_enabled(true);
+                    }
+                    CollectableType::GhostDown => {
+                        brick_ghost.set_enabled(false);
+                    }
+                    CollectableType::PaddleSizeUp => {
+                        paddle_size.change_points(1);
+                    }
+                    CollectableType::PaddleSizeDown => {
+                        paddle_size.change_points(-1);
+                    }
+                    CollectableType::PaddleSpeedUp => {
+                        paddle_speed.change_points(1);
+                    }
+                    CollectableType::PaddleSpeedDown => {
+                        paddle_speed.change_points(-1);
+                    }
+                }
+
                 commands.entity(entity).despawn();
             }
-        }
-    }
-}
-
-fn collect_collectable(
-    collectable_type: &CollectableType,
-    ball_size: &mut ResMut<BallSize>,
-    ball_speed: &mut ResMut<BallSpeed>,
-    paddle_size: &mut ResMut<PaddleSize>,
-    paddle_speed: &mut ResMut<PaddleSpeed>,
-)
-{
-    match collectable_type {
-        CollectableType::PaddleSizeUp => {
-            paddle_size.change_points(1);
-        }
-        CollectableType::PaddleSizeDown => {
-            paddle_size.change_points(-1);
-        }
-        CollectableType::PaddleSpeedUp => {
-            paddle_speed.change_points(1);
-        }
-        CollectableType::PaddleSpeedDown => {
-            paddle_speed.change_points(-1);
-        }
-        CollectableType::BallSizeUp => {
-            ball_size.change_points(1);
-        }
-        CollectableType::BallSizeDown => {
-            ball_size.change_points(-1);
-        }
-        CollectableType::BallSpeedUp => {
-            ball_speed.change_points(1);
-        }
-        CollectableType::BallSpeedDown => {
-            ball_speed.change_points(-1);
         }
     }
 }
