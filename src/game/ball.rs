@@ -3,7 +3,7 @@ use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
 use crate::game::shared::xy0;
 use super::BallHitGround;
 use super::collider::BoxCollider;
-use super::settings::BallSettings;
+use super::settings::{BallSize, BallSpeed};
 
 pub const BALL_SIZE: f32 = 22.0;
 
@@ -36,7 +36,7 @@ impl BallObstacle {
 pub fn spawn_first_ball(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    ball_settings: Res<BallSettings>,
+    ball_size: Res<BallSize>,
 )
 {
     spawn_ball(
@@ -44,7 +44,7 @@ pub fn spawn_first_ball(
         &asset_server,
         Vec2::new(WINDOW_USABLE_WORLD_WIDTH / 2.0, WINDOW_WORLD_HEIGHT / 2.0),
         Vec2::new(0., 1.),
-        &ball_settings,
+        &ball_size,
     )
 }
 
@@ -53,14 +53,14 @@ pub fn spawn_ball(
     asset_server: &Res<AssetServer>,
     position: Vec2,
     direction: Vec2,
-    ball_settings: &BallSettings,
+    ball_size: &BallSize,
 )
 {
     commands.spawn((
         SpriteBundle {
             transform: Transform{
                 translation: Vec3::new(position.x, position.y, 0.),
-                scale: ball_settings.get_scale3(),
+                scale: ball_size.get_scale3(),
                 ..default()
             },
             texture: asset_server.load("sprites/ballBlue.png"),
@@ -80,12 +80,12 @@ pub fn despawn_balls(
 }
 
 pub fn keep_ball_synced_with_settings(
-    ball_settings: Res<BallSettings>,
+    ball_size: Res<BallSize>,
     mut ball_query: Query<&mut Transform, With<Ball>>
 )
 {
-    if ball_settings.is_changed() {
-        let ball_scale = ball_settings.get_scale3();
+    if ball_size.is_changed() {
+        let ball_scale = ball_size.get_scale3();
 
         for mut ball_transform in ball_query.iter_mut() {
             ball_transform.scale = ball_scale;
@@ -97,16 +97,17 @@ pub fn move_balls(
     mut balls_query: Query<(&mut Transform, &mut Ball)>,
     mut obstacle_query: Query<(&Transform, &BoxCollider, &mut BallObstacle), Without<Ball>>,
     time: Res<Time>,
-    ball_settings: Res<BallSettings>,
+    ball_speed: Res<BallSpeed>,
+    ball_size: Res<BallSize>,
     mut ball_hit_ground_events: EventWriter<BallHitGround>,
 )
 {
-    let ball_speed = ball_settings.get_speed();
+    let ball_speed = ball_speed.get_speed();
     for (mut ball_transform, ball) in balls_query.iter_mut() {
         ball_transform.translation += ball_speed * time.delta_seconds() * ball.direction;
     }
 
-    let ball_radius = ball_settings.get_radius();
+    let ball_radius = ball_size.get_radius();
     bounce_ball_on_obstacles(ball_radius, &mut balls_query, &mut obstacle_query);
     bounce_ball_on_edges(ball_radius, &mut balls_query, &mut ball_hit_ground_events);
 }

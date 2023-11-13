@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use super::settings::PaddleSettings;
+use super::settings::{PaddleSize, PaddleSpeed};
 use super::collider::BoxCollider;
 use super::ball::{ BallObstacle, BallObstacleType };
 use crate::WINDOW_USABLE_WORLD_WIDTH;
@@ -27,10 +27,10 @@ pub struct PaddleSegment {
 pub fn spawn_paddle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    paddle_settings: Res<PaddleSettings>,
+    paddle_size: Res<PaddleSize>,
 )
 {
-    let paddle_width = paddle_settings.get_width();
+    let paddle_width = paddle_size.get_width();
 
     commands.spawn((
         Paddle,
@@ -124,7 +124,7 @@ pub fn move_paddle(
     input: Res<Input<KeyCode>>,
     mut paddle_query: Query<(&mut Transform, &BoxCollider), With<Paddle>>,
     time: Res<Time>,
-    paddle_settings: Res<PaddleSettings>,
+    paddle_speed: Res<PaddleSpeed>,
 )
 {
     let mut value: f32 = 0.0;
@@ -138,7 +138,7 @@ pub fn move_paddle(
     if value != 0.0 {
         if let Ok((mut transform, obstacle)) = paddle_query.get_single_mut() {
             let mut position = transform.translation;
-            position.x += value * paddle_settings.get_speed() * time.delta_seconds();
+            position.x += value * paddle_speed.get_speed() * time.delta_seconds();
 
             let paddle_half_width = obstacle.extends.x;
             let min_x = paddle_half_width;
@@ -155,13 +155,13 @@ pub fn move_paddle(
 }
 
 pub fn keep_paddle_synced_with_settings(
-    paddle_settings: Res<PaddleSettings>,
+    paddle_size: Res<PaddleSize>,
     mut paddle_query: Query<&mut BoxCollider, With<Paddle>>,
     mut paddle_segments_query: Query<(&mut Transform, &PaddleSegment)>
 )
 {
-    if paddle_settings.is_changed() {
-        let width = paddle_settings.get_width();
+    if paddle_size.is_changed() {
+        let width = paddle_size.get_width();
 
         if let Ok(mut obstacle) = paddle_query.get_single_mut(){
             obstacle.extends = Vec2::new(width / 2.0, PADDLE_HALF_HEIGHT);

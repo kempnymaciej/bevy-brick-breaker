@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::game::collectable::{Collectable, CollectableType};
-use super::settings::{BallSettings, PaddleSettings};
+use super::settings::{BallSize, BallSpeed, PaddleSize, PaddleSpeed};
 use super::ball::Ball;
 use super::collider::BoxCollider;
 use super::paddle::Paddle;
@@ -8,14 +8,14 @@ use super::paddle::Paddle;
 pub fn keep_ball_at_paddle_center (
     paddle_query: Query<(&Transform, &BoxCollider), With<Paddle>>,
     mut ball_query: Query<&mut Transform, (With<Ball>, Without<Paddle>)>,
-    ball_settings: Res<BallSettings>,
+    ball_size: Res<BallSize>,
 )
 {
     if let Ok((paddle_transform, paddle_collider)) = paddle_query.get_single() {
         for mut ball in ball_query.iter_mut() {
             ball.translation = Vec3 {
                 x: paddle_transform.translation.x,
-                y: paddle_transform.translation.y + paddle_collider.extends.y + ball_settings.get_radius(),
+                y: paddle_transform.translation.y + paddle_collider.extends.y + ball_size.get_radius(),
                 z: 0.,
             }
         }
@@ -26,8 +26,10 @@ pub fn collect_collectables(
     mut commands: Commands,
     collectable_query: Query<(Entity, &Transform, &BoxCollider, &Collectable)>,
     paddle_query: Query<(&Transform, &BoxCollider), With<Paddle>>,
-    mut paddle_settings: ResMut<PaddleSettings>,
-    mut ball_settings: ResMut<BallSettings>,
+    mut ball_size: ResMut<BallSize>,
+    mut ball_speed: ResMut<BallSpeed>,
+    mut paddle_size: ResMut<PaddleSize>,
+    mut paddle_speed: ResMut<PaddleSpeed>,
 )
 {
     if let Ok((paddle_transform, paddle_collider)) = paddle_query.get_single() {
@@ -38,7 +40,8 @@ pub fn collect_collectables(
             );
 
             if overlap {
-                collect_collectable(&collectable.collectable_type, &mut paddle_settings, &mut ball_settings);
+                collect_collectable(&collectable.collectable_type,
+                    &mut ball_size, &mut ball_speed, &mut paddle_size, &mut paddle_speed);
                 commands.entity(entity).despawn();
             }
         }
@@ -47,34 +50,36 @@ pub fn collect_collectables(
 
 fn collect_collectable(
     collectable_type: &CollectableType,
-    paddle_settings: &mut ResMut<PaddleSettings>,
-    ball_settings: &mut ResMut<BallSettings>,
+    ball_size: &mut ResMut<BallSize>,
+    ball_speed: &mut ResMut<BallSpeed>,
+    paddle_size: &mut ResMut<PaddleSize>,
+    paddle_speed: &mut ResMut<PaddleSpeed>,
 )
 {
     match collectable_type {
         CollectableType::PaddleSizeUp => {
-            paddle_settings.change_size_points(1);
+            paddle_size.change_points(1);
         }
         CollectableType::PaddleSizeDown => {
-            paddle_settings.change_size_points(-1);
+            paddle_size.change_points(-1);
         }
         CollectableType::PaddleSpeedUp => {
-            paddle_settings.change_speed_points(1);
+            paddle_speed.change_points(1);
         }
         CollectableType::PaddleSpeedDown => {
-            paddle_settings.change_speed_points(-1);
+            paddle_speed.change_points(-1);
         }
         CollectableType::BallSizeUp => {
-            ball_settings.change_size_points(1);
+            ball_size.change_points(1);
         }
         CollectableType::BallSizeDown => {
-            ball_settings.change_size_points(-1);
+            ball_size.change_points(-1);
         }
         CollectableType::BallSpeedUp => {
-            ball_settings.change_speed_points(1);
+            ball_speed.change_points(1);
         }
         CollectableType::BallSpeedDown => {
-            ball_settings.change_speed_points(-1);
+            ball_speed.change_points(-1);
         }
     }
 }
