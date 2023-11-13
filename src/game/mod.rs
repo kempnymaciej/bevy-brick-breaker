@@ -6,6 +6,8 @@ pub mod settings;
 mod shared;
 pub mod events;
 mod collectable;
+mod particle;
+mod spark;
 
 use bevy::prelude::*;
 use crate::{AppState};
@@ -16,9 +18,10 @@ use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
 use crate::game::ball::keep_ball_synced_with_settings;
 use crate::game::brick::keep_brick_synced_with_settings;
 use crate::game::events::{BallHitGround, BrickDestroyed};
-use crate::game::collectable::{despawn_collectables, keep_despawning_collectables, keep_spawning_collectables, move_collectables};
+use crate::game::collectable::{despawn_collectables, keep_spawning_collectables};
 use crate::game::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed};
 use crate::game::shared::{collect_collectables, keep_ball_at_paddle_center};
+use crate::game::spark::{keep_despawning_sparks, move_sparks};
 
 pub struct GamePlugin;
 
@@ -64,8 +67,8 @@ impl Plugin for GamePlugin {
                          keep_paddle_synced_with_settings,
                          keep_brick_synced_with_settings,
                          keep_spawning_collectables,
-                         move_collectables,
-                         keep_despawning_collectables,
+                         move_sparks,
+                         keep_despawning_sparks,
                          collect_collectables,
                          check_end_game,
                      ).run_if(in_state(InGameState::Play)),

@@ -5,6 +5,14 @@ pub struct BoxCollider {
     pub extends: Vec2,
 }
 
+impl Default for BoxCollider {
+    fn default() -> Self {
+        Self {
+            extends: Vec2::new(100., 100.),
+        }
+    }
+}
+
 impl BoxCollider {
     pub fn overlap(box1_center: Vec2, box1_extents: Vec2, box2_center: Vec2, box2_extents: Vec2) -> bool {
         let box1_min = box1_center - box1_extents;
