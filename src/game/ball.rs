@@ -8,6 +8,7 @@ use super::settings::BallSettings;
 pub const BALL_SIZE: f32 = 22.0;
 
 pub enum BallObstacleType {
+    Ghost,
     Natural,
     Centric,
 }
@@ -140,6 +141,7 @@ fn bounce_ball_on_obstacles(
                 obstacle.hit_flag = true;
 
                 match obstacle.obstacle_type {
+                    BallObstacleType::Ghost => { /* do nothing */ }
                     BallObstacleType::Natural => {
                         if ball_flip_direction_x && ball_flip_direction_y {
                             continue;
