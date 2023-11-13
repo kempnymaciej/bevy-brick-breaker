@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use super::ball::BALL_SIZE;
+use super::ball::{BALL_SIZE, BallObstacleType};
 use super::paddle::PADDLE_WIDTH;
 
 #[derive(Resource)]
@@ -120,6 +120,27 @@ impl Default for PaddleSize {
     fn default() -> Self {
         Self {
             points: Self::DEFAULT_POINTS,
+        }
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct BrickGhost {
+    enabled: bool,
+}
+
+impl BrickGhost {
+    pub fn set_enabled(&mut self, value: bool) {
+        self.enabled = value;
+        println!("BrickGhost.enabled: {}", value);
+    }
+
+    pub fn get_obstacle_type(&self) -> BallObstacleType {
+        if self.enabled {
+            BallObstacleType::Ghost
+        }
+        else {
+            BallObstacleType::Natural
         }
     }
 }

@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use super::ball::{BallObstacle, BallObstacleType};
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
 use crate::game::events::BrickDestroyed;
+use crate::game::settings::BrickGhost;
 use super::collider::BoxCollider;
 
 pub const BRICK_WIDTH: f32 = 64.0;
@@ -60,6 +61,20 @@ pub fn destroy_bricks_on_hit(
         if obstacle.hit_flag == true {
             commands.entity(entity).despawn();
             brick_destroyed_events.send(BrickDestroyed { brick_position: transform.translation.xy()});
+        }
+    }
+}
+
+pub fn keep_brick_synced_with_settings(
+    mut bricks_query: Query<&mut BallObstacle, With<Brick>>,
+    brick_ghost: Res<BrickGhost>,
+)
+{
+    if brick_ghost.is_changed() {
+        let obstacle_type = brick_ghost.get_obstacle_type();
+
+        for mut obstacle in bricks_query.iter_mut() {
+            obstacle.obstacle_type = obstacle_type;
         }
     }
 }

@@ -7,6 +7,7 @@ use super::settings::{BallSize, BallSpeed};
 
 pub const BALL_SIZE: f32 = 22.0;
 
+#[derive(Copy, Clone)]
 pub enum BallObstacleType {
     Ghost,
     Natural,

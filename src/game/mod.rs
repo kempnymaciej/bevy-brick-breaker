@@ -14,9 +14,10 @@ use paddle::{despawn_paddles, spawn_paddle, move_paddle, keep_paddle_synced_with
 use ball::{ spawn_first_ball, move_balls, despawn_balls };
 use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
 use crate::game::ball::keep_ball_synced_with_settings;
+use crate::game::brick::keep_brick_synced_with_settings;
 use crate::game::events::{BallHitGround, BrickDestroyed};
 use crate::game::collectable::{despawn_collectables, keep_despawning_collectables, keep_spawning_collectables, move_collectables};
-use crate::game::settings::{BallSize, BallSpeed, PaddleSize, PaddleSpeed};
+use crate::game::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed};
 use crate::game::shared::{collect_collectables, keep_ball_at_paddle_center};
 
 pub struct GamePlugin;
@@ -36,6 +37,7 @@ impl Plugin for GamePlugin {
             .add_state::<InGameState>()
             .init_resource::<BallSize>()
             .init_resource::<BallSpeed>()
+            .init_resource::<BrickGhost>()
             .init_resource::<PaddleSize>()
             .init_resource::<PaddleSpeed>()
             .add_event::<BallHitGround>()
@@ -60,6 +62,7 @@ impl Plugin for GamePlugin {
                          test_settings,
                          keep_ball_synced_with_settings,
                          keep_paddle_synced_with_settings,
+                         keep_brick_synced_with_settings,
                          keep_spawning_collectables,
                          move_collectables,
                          keep_despawning_collectables,
@@ -90,6 +93,7 @@ fn reset_resources(
 {
     commands.insert_resource(BallSize::default());
     commands.insert_resource(BallSpeed::default());
+    commands.insert_resource(BrickGhost::default());
     commands.insert_resource(PaddleSize::default());
     commands.insert_resource(PaddleSpeed::default());
 }
@@ -148,6 +152,7 @@ pub fn test_settings(
     input: Res<Input<KeyCode>>,
     mut ball_size: ResMut<BallSize>,
     mut ball_speed: ResMut<BallSpeed>,
+    mut brick_ghost: ResMut<BrickGhost>,
     mut paddle_size: ResMut<PaddleSize>,
     mut paddle_speed: ResMut<PaddleSpeed>,
 )
@@ -172,5 +177,8 @@ pub fn test_settings(
     }
     if input.pressed(KeyCode::Key4) {
         ball_speed.change_points(value);
+    }
+    if input.pressed(KeyCode::Key5) {
+        brick_ghost.set_enabled(value > 0);
     }
 }
