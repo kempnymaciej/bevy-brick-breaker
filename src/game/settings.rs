@@ -4,10 +4,8 @@ use super::paddle::PADDLE_WIDTH;
 
 #[derive(Resource)]
 pub struct BallSettings {
-    speed_points: i32,
-    speed_points_clamped: usize,
-    size_points: i32,
-    size_points_clamped: usize,
+    speed_points: usize,
+    size_points: usize,
 }
 
 impl BallSettings {
@@ -18,25 +16,23 @@ impl BallSettings {
     const SIZE_LEVEL_SCALES: &'static [f32] = &[1.0, 2.0, 3.0];
 
     pub fn change_speed_points(&mut self, delta_points: i32) {
-        self.speed_points += delta_points;
-        self.speed_points_clamped = (self.speed_points.max(0) as usize)
-            .min(Self::SPEED_LEVELS.len() - 1);
-        println!("BallSettings.speed_points_clamped: {}", self.speed_points_clamped);
+        let speed_points = (self.speed_points as i32 + delta_points).max(0);
+        self.speed_points = (speed_points as usize).min(Self::SPEED_LEVELS.len() - 1);
+        println!("BallSettings.speed_points: {}/{}", self.speed_points, Self::SPEED_LEVELS.len() - 1);
     }
 
     pub fn get_speed(&self) -> f32 {
-        Self::SPEED_LEVELS[self.speed_points_clamped]
+        Self::SPEED_LEVELS[self.speed_points]
     }
 
     pub fn change_size_points(&mut self, delta_points: i32) {
-        self.size_points += delta_points;
-        self.size_points_clamped = (self.size_points.max(0) as usize)
-            .min(Self::SIZE_LEVEL_SCALES.len() - 1);
-        println!("BallSettings.size_points_clamped: {}", self.size_points_clamped);
+        let size_points = (self.size_points as i32 + delta_points).max(0);
+        self.size_points = (size_points as usize).min(Self::SIZE_LEVEL_SCALES.len() - 1);
+        println!("BallSettings.size_points: {}/{}", self.size_points, Self::SIZE_LEVEL_SCALES.len() - 1);
     }
 
     pub fn get_scale(&self) -> f32 {
-        Self::SIZE_LEVEL_SCALES[self.size_points_clamped]
+        Self::SIZE_LEVEL_SCALES[self.size_points]
     }
 
     pub fn get_scale3(&self) -> Vec3 {
@@ -52,20 +48,16 @@ impl BallSettings {
 impl Default for BallSettings {
     fn default() -> Self {
         BallSettings {
-            speed_points: BallSettings::DEFAULT_SPEED_POINTS as i32,
-            speed_points_clamped: BallSettings::DEFAULT_SPEED_POINTS,
-            size_points: BallSettings::DEFAULT_SIZE_POINTS as i32,
-            size_points_clamped: BallSettings::DEFAULT_SIZE_POINTS,
+            speed_points: BallSettings::DEFAULT_SPEED_POINTS,
+            size_points: BallSettings::DEFAULT_SIZE_POINTS,
         }
     }
 }
 
 #[derive(Resource)]
 pub struct PaddleSettings {
-    speed_points: i32,
-    speed_points_clamped: usize,
-    size_points: i32,
-    size_points_clamped: usize,
+    speed_points: usize,
+    size_points: usize,
 }
 
 impl PaddleSettings {
@@ -77,35 +69,31 @@ impl PaddleSettings {
     const SIZE_LEVEL_EXTRA_WIDTHS: &'static [f32] = &[0., 25., 49., 81., 121., 169., 225., 289., 361., 441., 529.];
 
     pub fn change_speed_points(&mut self, delta_points: i32) {
-        self.speed_points += delta_points;
-        self.speed_points_clamped = (self.speed_points.max(0) as usize)
-            .min(Self::SPEED_LEVELS.len() - 1);
-        println!("PaddleSettings.speed_points_clamped: {}", self.speed_points_clamped);
+        let speed_points = (self.speed_points as i32 + delta_points).max(0);
+        self.speed_points = (speed_points as usize).min(Self::SPEED_LEVELS.len() - 1);
+        println!("PaddleSettings.speed_points: {}/{}", self.speed_points, Self::SPEED_LEVELS.len() - 1);
     }
 
     pub fn get_speed(&self) -> f32 {
-        Self::SPEED_LEVELS[self.speed_points_clamped]
+        Self::SPEED_LEVELS[self.speed_points]
     }
 
     pub fn change_size_points(&mut self, delta_points: i32) {
-        self.size_points += delta_points;
-        self.size_points_clamped = (self.size_points.max(0) as usize)
-            .min(Self::SIZE_LEVEL_EXTRA_WIDTHS.len() - 1);
-        println!("PaddleSettings.size_points_clamped: {}", self.size_points_clamped);
+        let size_points = (self.size_points as i32 + delta_points).max(0);
+        self.size_points = (size_points as usize).min(Self::SIZE_LEVEL_EXTRA_WIDTHS.len() - 1);
+        println!("PaddleSettings.size_points: {}/{}", self.size_points, Self::SIZE_LEVEL_EXTRA_WIDTHS.len() - 1);
     }
 
     pub fn get_width(&self) -> f32 {
-        Self::MIN_WIDTH + Self::SIZE_LEVEL_EXTRA_WIDTHS[self.size_points_clamped]
+        Self::MIN_WIDTH + Self::SIZE_LEVEL_EXTRA_WIDTHS[self.size_points]
     }
 }
 
 impl Default for PaddleSettings {
     fn default() -> Self {
         PaddleSettings {
-            speed_points: PaddleSettings::DEFAULT_SPEED_POINTS as i32,
-            speed_points_clamped: PaddleSettings::DEFAULT_SPEED_POINTS,
-            size_points: PaddleSettings::DEFAULT_SIZE_POINTS as i32,
-            size_points_clamped: PaddleSettings::DEFAULT_SIZE_POINTS,
+            speed_points: PaddleSettings::DEFAULT_SPEED_POINTS,
+            size_points: PaddleSettings::DEFAULT_SIZE_POINTS,
         }
     }
 }
