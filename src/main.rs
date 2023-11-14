@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 use bevy::window::WindowResized;
 use crate::common::better_button::BetterButtonPlugin;
+use crate::common::window_height_relative_scal::WindowHeightRelativeScalePlugin;
 use crate::game::GamePlugin;
 use crate::menu::MenuPlugin;
 
@@ -24,7 +25,12 @@ fn main() {
     App::new()
         .add_state::<AppState>()
         .add_plugins(DefaultPlugins)
-        .add_plugins((MenuPlugin, GamePlugin, BetterButtonPlugin))
+        .add_plugins((
+            MenuPlugin,
+            GamePlugin, 
+            BetterButtonPlugin,
+            WindowHeightRelativeScalePlugin
+        ))
         .add_systems(Startup, spawn_camera)
         .add_systems(Update, guard_resolution)
         .run();
