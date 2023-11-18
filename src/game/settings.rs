@@ -2,6 +2,9 @@ use bevy::prelude::*;
 use super::ball::{BALL_SIZE, BallObstacleType};
 use super::paddle::PADDLE_WIDTH;
 
+#[derive(Resource, Default)]
+pub struct Score(pub usize);
+
 #[derive(Resource)]
 pub struct BallSpeed {
     points: usize,

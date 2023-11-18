@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::game::collectable::{Collectable, CollectableType};
-use super::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed};
+use super::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
 use super::ball::{Ball, spawn_ball};
 use super::collider::BoxCollider;
 use super::paddle::Paddle;
@@ -27,6 +27,7 @@ pub fn collect_collectables(
     collectable_query: Query<(Entity, &Transform, &BoxCollider, &Collectable)>,
     paddle_query: Query<(&Transform, &BoxCollider), With<Paddle>>,
     ball_query: Query<(&Ball, &Transform)>,
+    mut score: ResMut<Score>,
     mut ball_size: ResMut<BallSize>,
     mut ball_speed: ResMut<BallSpeed>,
     mut paddle_size: ResMut<PaddleSize>,
@@ -63,7 +64,7 @@ pub fn collect_collectables(
                         ball_speed.change_points(-1);
                     }
                     CollectableType::Coin => {
-
+                        score.0 += 10000;
                     }
                     CollectableType::GhostUp => {
                         brick_ghost.set_enabled(true);

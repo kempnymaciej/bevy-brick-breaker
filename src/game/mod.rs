@@ -7,6 +7,7 @@ mod shared;
 pub mod events;
 mod collectable;
 mod spark;
+mod score_view;
 
 use bevy::prelude::*;
 use crate::{AppState};
@@ -18,7 +19,8 @@ use crate::game::ball::keep_ball_synced_with_settings;
 use crate::game::brick::keep_brick_synced_with_settings;
 use crate::game::events::{BallHitGround, BrickDestroyed};
 use crate::game::collectable::{despawn_collectables, keep_spawning_collectables};
-use crate::game::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed};
+use crate::game::score_view::{despawn_score_view, spawn_score_view, update_score_view};
+use crate::game::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
 use crate::game::shared::{collect_collectables, keep_ball_at_paddle_center};
 use crate::game::spark::{keep_despawning_sparks, move_sparks};
 
@@ -37,6 +39,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_state::<InGameState>()
+            .init_resource::<Score>()
             .init_resource::<BallSize>()
             .init_resource::<BallSpeed>()
             .init_resource::<BrickGhost>()
@@ -46,6 +49,7 @@ impl Plugin for GamePlugin {
             .add_event::<BrickDestroyed>()
             .add_systems(OnEnter(AppState::InGame),
                 (
+                    spawn_score_view,
                     spawn_first_ball,
                     spawn_paddle,
                     spawn_bricks,
@@ -58,6 +62,7 @@ impl Plugin for GamePlugin {
                          check_preparation_end_condition,
                      ).run_if(in_state(InGameState::Preparation)),
                      (
+                         update_score_view,
                          move_paddle,
                          move_balls,
                          destroy_bricks_on_hit,
@@ -79,6 +84,7 @@ impl Plugin for GamePlugin {
             )
             .add_systems(OnExit(AppState::InGame),
                  (
+                     despawn_score_view,
                      despawn_balls,
                      despawn_paddles,
                      despawn_bricks,
@@ -93,6 +99,7 @@ fn reset_resources(
     mut commands: Commands
 )
 {
+    commands.insert_resource(Score::default());
     commands.insert_resource(BallSize::default());
     commands.insert_resource(BallSpeed::default());
     commands.insert_resource(BrickGhost::default());
