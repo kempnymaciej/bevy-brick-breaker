@@ -16,7 +16,7 @@ use paddle::{despawn_paddles, spawn_paddle, move_paddle, keep_paddle_synced_with
 use ball::{ spawn_first_ball, move_balls, despawn_balls };
 use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
 use crate::game::ball::keep_ball_synced_with_settings;
-use crate::game::brick::keep_brick_synced_with_settings;
+use crate::game::brick::{keep_brick_synced_with_settings, keep_spawning_bricks};
 use crate::game::events::{BallHitGround, BrickDestroyed};
 use crate::game::collectable::{despawn_collectables, keep_spawning_collectables};
 use crate::game::score_view::{despawn_score_view, spawn_score_view, update_score_view};
@@ -70,6 +70,7 @@ impl Plugin for GamePlugin {
                          keep_ball_synced_with_settings,
                          keep_paddle_synced_with_settings,
                          keep_brick_synced_with_settings,
+                         keep_spawning_bricks,
                          keep_spawning_collectables,
                          move_sparks,
                          keep_despawning_sparks,

@@ -11,6 +11,13 @@ pub const BRICK_HALF_WIDTH: f32 = BRICK_WIDTH / 2.0;
 pub const BRICK_HEIGHT: f32 = 32.0;
 pub const BRICK_HALF_HEIGHT: f32 = BRICK_HEIGHT / 2.0;
 
+const NUMBER_OF_BRICKS_IN_ROW: i32 = (WINDOW_USABLE_WORLD_WIDTH / BRICK_WIDTH) as i32;
+const BRICK_HORIZONTAL_SPACE: f32 = WINDOW_USABLE_WORLD_WIDTH / NUMBER_OF_BRICKS_IN_ROW as f32;
+
+const START_NUMBER_OF_ROWS: i32 = 5;
+const MAX_NUMBER_OF_ROWS: i32 = 9;
+const TARGET_MIN_NUMBER_OF_BRICKS: i32 = START_NUMBER_OF_ROWS * NUMBER_OF_BRICKS_IN_ROW;
+
 #[derive(Component)]
 pub struct Brick;
 
@@ -19,25 +26,8 @@ pub fn spawn_bricks(
     asset_server: Res<AssetServer>,
 )
 {
-    let number_of_bricks_x = (WINDOW_USABLE_WORLD_WIDTH / BRICK_WIDTH) as i32;
-    let x_space = WINDOW_USABLE_WORLD_WIDTH / number_of_bricks_x as f32;
-    for y_index in 0..4 {
-        for x_index in 0..number_of_bricks_x {
-            let x = x_index as f32 * x_space + BRICK_HALF_WIDTH;
-            let y = WINDOW_WORLD_HEIGHT - BRICK_HALF_HEIGHT - y_index as f32 * BRICK_HEIGHT;
-            commands.spawn((
-                SpriteBundle {
-                    transform: Transform::from_xyz(x, y, 0.0),
-                    texture: asset_server.load("sprites/element_blue_rectangle.png"),
-                    ..default()
-                },
-                Brick {},
-                BallObstacle::new(BallObstacleType::Natural),
-                BoxCollider {
-                    extends: Vec2::new(BRICK_HALF_WIDTH, BRICK_HALF_HEIGHT),
-                }
-            ));
-        }
+    for row_index in 0..START_NUMBER_OF_ROWS {
+        spawn_row(row_index, &mut commands, &asset_server);
     }
 }
 
@@ -77,4 +67,56 @@ pub fn keep_brick_synced_with_settings(
             obstacle.obstacle_type = obstacle_type;
         }
     }
+}
+
+pub fn spawn_row(
+    row_index: i32,
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+)
+{
+    for x_index in 0..NUMBER_OF_BRICKS_IN_ROW {
+        let x = x_index as f32 * BRICK_HORIZONTAL_SPACE + BRICK_HORIZONTAL_SPACE / 2.;
+        let y = WINDOW_WORLD_HEIGHT - BRICK_HALF_HEIGHT - row_index as f32 * BRICK_HEIGHT;
+        commands.spawn((
+            SpriteBundle {
+                transform: Transform::from_xyz(x, y, 0.0),
+                texture: asset_server.load("sprites/element_blue_rectangle.png"),
+                ..default()
+            },
+            Brick {},
+            BallObstacle::new(BallObstacleType::Natural),
+            BoxCollider {
+                extends: Vec2::new(BRICK_HALF_WIDTH, BRICK_HALF_HEIGHT),
+            }
+        ));
+    }
+}
+
+pub fn keep_spawning_bricks(
+    mut commands: Commands,
+    mut brick_query: Query<&mut Transform, With<Brick>>,
+    asset_server: Res<AssetServer>,
+)
+{
+    let mut number_of_bricks = 0;
+    let mut lowest_brick_y = f32::MAX;
+
+    for brick in brick_query.iter() {
+        number_of_bricks += 1;
+        lowest_brick_y = lowest_brick_y.min(brick.translation.y);
+    }
+
+    let lowest_row_index = (-(lowest_brick_y - WINDOW_WORLD_HEIGHT + BRICK_HALF_HEIGHT) / BRICK_HEIGHT).round() as i32;
+
+    if lowest_row_index >= MAX_NUMBER_OF_ROWS - 1 || number_of_bricks >= TARGET_MIN_NUMBER_OF_BRICKS
+    {
+        return;
+    }
+
+    for mut brick in brick_query.iter_mut() {
+        brick.translation.y -= BRICK_HEIGHT;
+    }
+
+    spawn_row(0, &mut commands, &asset_server);
 }
