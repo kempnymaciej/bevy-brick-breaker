@@ -7,6 +7,8 @@ pub struct LastBallDestroyed;
 pub struct RestartRequested;
 #[derive(Event, Default)]
 pub struct MenuRequested;
+#[derive(Event, Default)]
+pub struct TogglePauseRequested;
 
 #[derive(Event, Default)]
 pub struct BrickDestroyed {

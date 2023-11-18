@@ -9,6 +9,7 @@ mod collectable;
 mod spark;
 mod score_view;
 mod summary_view;
+mod pause_view;
 
 use bevy::prelude::*;
 use crate::{AppState};
@@ -18,8 +19,9 @@ use ball::{ spawn_first_ball, move_balls, despawn_balls };
 use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
 use crate::game::ball::{keep_ball_synced_with_settings, keep_destroying_balls};
 use crate::game::brick::{keep_brick_synced_with_settings, keep_spawning_bricks};
-use crate::game::events::{BrickDestroyed, LastBallDestroyed, RestartRequested, MenuRequested};
+use crate::game::events::{BrickDestroyed, LastBallDestroyed, RestartRequested, MenuRequested, TogglePauseRequested};
 use crate::game::collectable::{despawn_collectables, keep_spawning_collectables};
+use crate::game::pause_view::{spawn_pause_view, despawn_pause_view, check_pause_interactions};
 use crate::game::score_view::{despawn_score_view, spawn_score_view, update_score_view};
 use crate::game::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
 use crate::game::shared::{collect_collectables, keep_ball_at_paddle_center};
@@ -51,6 +53,7 @@ impl Plugin for GamePlugin {
             .add_event::<LastBallDestroyed>()
             .add_event::<RestartRequested>()
             .add_event::<MenuRequested>()
+            .add_event::<TogglePauseRequested>()
             .add_systems(OnEnter(AppState::RestartInGame), continue_restart_game)
             .add_systems(OnEnter(AppState::InGame),
                 (
@@ -63,7 +66,6 @@ impl Plugin for GamePlugin {
             .add_systems(OnExit(AppState::InGame),
                          (
                              despawn_score_view,
-                             despawn_summary_view,
                              despawn_balls,
                              despawn_paddles,
                              despawn_bricks,
@@ -72,6 +74,9 @@ impl Plugin for GamePlugin {
                          )
             )
             .add_systems(OnEnter(InGameState::Summary), spawn_summary_view)
+            .add_systems(OnExit(InGameState::Summary), despawn_summary_view)
+            .add_systems(OnEnter(InGameState::Pause), spawn_pause_view)
+            .add_systems(OnExit(InGameState::Pause), despawn_pause_view)
             .add_systems(Update,
                  (
                      (
@@ -94,6 +99,9 @@ impl Plugin for GamePlugin {
                          keep_despawning_sparks,
                          collect_collectables,
                      ).run_if(in_state(InGameState::Play)),
+                     (
+                         check_pause_interactions,
+                     ).run_if(in_state(InGameState::Pause)),
                      (
                          check_summary_interactions,
                      ).run_if(in_state(InGameState::Summary)),
@@ -191,15 +199,30 @@ fn check_toggle_pause_condition(
     input: Res<Input<KeyCode>>,
     current_state: Res<State<InGameState>>,
     mut next_state: ResMut<NextState<InGameState>>,
+    mut toggle_pause_requested_events: EventReader<TogglePauseRequested>,
 )
 {
-    if input.just_pressed(KeyCode::P) {
-        if *current_state.get() == InGameState::Play {
-            next_state.set(InGameState::Pause);
-        }
-        else {
-            next_state.set(InGameState::Play);
-        }
+    let mut toggle = false;
+
+    if !toggle_pause_requested_events.is_empty()
+    {
+        toggle = true;
+        toggle_pause_requested_events.clear();
+
+    }
+    if input.just_pressed(KeyCode::Escape) {
+        toggle = true;
+    }
+
+    if !toggle {
+        return;
+    }
+
+    if *current_state.get() == InGameState::Play {
+        next_state.set(InGameState::Pause);
+    }
+    else {
+        next_state.set(InGameState::Play);
     }
 }
 
