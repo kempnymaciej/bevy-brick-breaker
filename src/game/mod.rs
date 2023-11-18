@@ -8,6 +8,7 @@ pub mod events;
 mod collectable;
 mod spark;
 mod score_view;
+mod summary_view;
 
 use bevy::prelude::*;
 use crate::{AppState};
@@ -17,12 +18,13 @@ use ball::{ spawn_first_ball, move_balls, despawn_balls };
 use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
 use crate::game::ball::{keep_ball_synced_with_settings, keep_destroying_balls};
 use crate::game::brick::{keep_brick_synced_with_settings, keep_spawning_bricks};
-use crate::game::events::{BrickDestroyed, LastBallDestroyed};
+use crate::game::events::{BrickDestroyed, LastBallDestroyed, RestartRequested, MenuRequested};
 use crate::game::collectable::{despawn_collectables, keep_spawning_collectables};
 use crate::game::score_view::{despawn_score_view, spawn_score_view, update_score_view};
 use crate::game::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
 use crate::game::shared::{collect_collectables, keep_ball_at_paddle_center};
 use crate::game::spark::{keep_despawning_sparks, move_sparks};
+use crate::game::summary_view::{check_summary_interactions, despawn_summary_view, spawn_summary_view};
 
 pub struct GamePlugin;
 
@@ -47,6 +49,9 @@ impl Plugin for GamePlugin {
             .init_resource::<PaddleSpeed>()
             .add_event::<BrickDestroyed>()
             .add_event::<LastBallDestroyed>()
+            .add_event::<RestartRequested>()
+            .add_event::<MenuRequested>()
+            .add_systems(OnEnter(AppState::RestartInGame), continue_restart_game)
             .add_systems(OnEnter(AppState::InGame),
                 (
                     spawn_score_view,
@@ -55,6 +60,18 @@ impl Plugin for GamePlugin {
                     spawn_bricks,
                 )
             )
+            .add_systems(OnExit(AppState::InGame),
+                         (
+                             despawn_score_view,
+                             despawn_summary_view,
+                             despawn_balls,
+                             despawn_paddles,
+                             despawn_bricks,
+                             despawn_collectables,
+                             clean_up,
+                         )
+            )
+            .add_systems(OnEnter(InGameState::Summary), spawn_summary_view)
             .add_systems(Update,
                  (
                      (
@@ -78,29 +95,25 @@ impl Plugin for GamePlugin {
                          collect_collectables,
                      ).run_if(in_state(InGameState::Play)),
                      (
+                         check_summary_interactions,
+                     ).run_if(in_state(InGameState::Summary)),
+                     (
                          check_menu_condition,
+                         check_restart_condition,
                          check_toggle_pause_condition,
                          check_summary_condition,
                      ),
                  ).run_if(in_state(AppState::InGame)),
-            )
-            .add_systems(OnExit(AppState::InGame),
-                 (
-                     despawn_score_view,
-                     despawn_balls,
-                     despawn_paddles,
-                     despawn_bricks,
-                     despawn_collectables,
-                     reset_resources,
-                 )
             );
     }
 }
 
-fn reset_resources(
-    mut commands: Commands
+fn clean_up(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<InGameState>>,
 )
 {
+    next_state.set(InGameState::Preparation);
     commands.insert_resource(Score::default());
     commands.insert_resource(BallSize::default());
     commands.insert_resource(BallSpeed::default());
@@ -126,13 +139,38 @@ fn check_preparation_end_condition(
 }
 
 fn check_menu_condition(
-    input: Res<Input<KeyCode>>,
+    mut menu_requested_events: EventReader<MenuRequested>,
     mut next_state: ResMut<NextState<AppState>>
 )
 {
-    if input.just_pressed(KeyCode::G) {
-        next_state.set(AppState::Menu)
+    if menu_requested_events.is_empty()
+    {
+        return;
     }
+
+    menu_requested_events.clear();
+    next_state.set(AppState::Menu);
+}
+
+fn check_restart_condition(
+    mut restart_requested_events: EventReader<RestartRequested>,
+    mut next_state: ResMut<NextState<AppState>>
+)
+{
+    if restart_requested_events.is_empty()
+    {
+        return;
+    }
+
+    restart_requested_events.clear();
+    next_state.set(AppState::RestartInGame);
+}
+
+fn continue_restart_game(
+    mut next_state: ResMut<NextState<AppState>>
+)
+{
+    next_state.set(AppState::InGame);
 }
 
 fn check_summary_condition(

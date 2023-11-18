@@ -19,6 +19,7 @@ pub enum AppState {
     #[default]
     Menu,
     InGame,
+    RestartInGame,
 }
 
 fn main() {
