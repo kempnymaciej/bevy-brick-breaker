@@ -1,27 +1,17 @@
-mod systems;
-mod components;
-pub mod styles;
+mod menu_view;
 
 use bevy::prelude::*;
-use systems::*;
-use super::AppState;
+use crate::AppState;
+use crate::menu::menu_view::{check_menu_interactions, despawn_menu_ui, spawn_menu_ui};
 
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(OnEnter(AppState::Menu), (notify_menu_enter, spawn_menu_ui))
-            .add_systems(Update, (check_play_trigger, check_quit_trigger)
+            .add_systems(OnEnter(AppState::Menu), spawn_menu_ui)
+            .add_systems(Update, (check_menu_interactions,)
                 .run_if(in_state(AppState::Menu)))
-            .add_systems(OnExit(AppState::Menu), (notify_menu_exit, despawn_menu_ui));
+            .add_systems(OnExit(AppState::Menu), despawn_menu_ui);
     }
-}
-
-fn notify_menu_enter() {
-    println!("menu entered");
-}
-
-fn notify_menu_exit() {
-    println!("menu exited");
 }
