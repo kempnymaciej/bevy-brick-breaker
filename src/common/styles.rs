@@ -42,6 +42,21 @@ pub fn spawn_full_screen_menu_button<T : Default>(
     });
 }
 
+pub fn spawn_full_screen_menu_header(
+    parent: &mut ChildBuilder,
+    asset_server: &Res<AssetServer>,
+    label: impl Into<String>,
+)
+{
+    parent.spawn(
+        TextBundle::from_section(label, TextStyle {
+            font: asset_server.load("fonts/OpenSans-Regular.ttf"),
+            font_size: 90.,
+            color: Color::WHITE,
+        })
+    );
+}
+
 pub fn get_full_screen_menu_node_bundle() -> NodeBundle {
     NodeBundle {
         style: Style {
