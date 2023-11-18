@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::ball::{BallObstacle, BallObstacleType};
+use super::ball::{BallObstacle};
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
 use crate::game::events::BrickDestroyed;
 use crate::game::settings::BrickGhost;
@@ -24,10 +24,11 @@ pub struct Brick;
 pub fn spawn_bricks(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    brick_ghost: Res<BrickGhost>,
 )
 {
     for row_index in 0..START_NUMBER_OF_ROWS {
-        spawn_row(row_index, &mut commands, &asset_server);
+        spawn_row(row_index, &mut commands, &asset_server, &brick_ghost);
     }
 }
 
@@ -73,8 +74,10 @@ pub fn spawn_row(
     row_index: i32,
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
+    brick_ghost: &Res<BrickGhost>,
 )
 {
+    let obstacle_type = brick_ghost.get_obstacle_type();
     for x_index in 0..NUMBER_OF_BRICKS_IN_ROW {
         let x = x_index as f32 * BRICK_HORIZONTAL_SPACE + BRICK_HORIZONTAL_SPACE / 2.;
         let y = WINDOW_WORLD_HEIGHT - BRICK_HALF_HEIGHT - row_index as f32 * BRICK_HEIGHT;
@@ -85,7 +88,7 @@ pub fn spawn_row(
                 ..default()
             },
             Brick {},
-            BallObstacle::new(BallObstacleType::Natural),
+            BallObstacle::new(obstacle_type),
             BoxCollider {
                 extends: Vec2::new(BRICK_HALF_WIDTH, BRICK_HALF_HEIGHT),
             }
@@ -97,6 +100,7 @@ pub fn keep_spawning_bricks(
     mut commands: Commands,
     mut brick_query: Query<&mut Transform, With<Brick>>,
     asset_server: Res<AssetServer>,
+    brick_ghost: Res<BrickGhost>,
 )
 {
     let mut number_of_bricks = 0;
@@ -118,5 +122,5 @@ pub fn keep_spawning_bricks(
         brick.translation.y -= BRICK_HEIGHT;
     }
 
-    spawn_row(0, &mut commands, &asset_server);
+    spawn_row(0, &mut commands, &asset_server, &brick_ghost);
 }
