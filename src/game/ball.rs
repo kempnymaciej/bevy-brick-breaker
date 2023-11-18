@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
+use crate::game::events::LastBallDestroyed;
 use crate::game::shared::xy0;
-use super::BallHitGround;
 use super::collider::BoxCollider;
 use super::settings::{BallSize, BallSpeed};
 
@@ -100,7 +100,6 @@ pub fn move_balls(
     time: Res<Time>,
     ball_speed: Res<BallSpeed>,
     ball_size: Res<BallSize>,
-    mut ball_hit_ground_events: EventWriter<BallHitGround>,
 )
 {
     let ball_speed = ball_speed.get_speed();
@@ -110,7 +109,33 @@ pub fn move_balls(
 
     let ball_radius = ball_size.get_radius();
     bounce_ball_on_obstacles(ball_radius, &mut balls_query, &mut obstacle_query);
-    bounce_ball_on_edges(ball_radius, &mut balls_query, &mut ball_hit_ground_events);
+    bounce_ball_on_edges(ball_radius, &mut balls_query);
+}
+
+pub fn keep_destroying_balls(
+    mut commands: Commands,
+    mut last_ball_destroyed_events: EventWriter<LastBallDestroyed>,
+    ball_query: Query<(Entity, &Transform), With<Ball>>,
+    ball_size: Res<BallSize>,
+)
+{
+    let destruction_level = -2. * ball_size.get_radius();
+    let mut balls = 0;
+    for (entity, transform) in ball_query.iter() {
+        if transform.translation.y <= destruction_level
+        {
+            commands.entity(entity).despawn();
+        }
+        else
+        {
+            balls += 1;
+        }
+    }
+
+    if balls == 0
+    {
+        last_ball_destroyed_events.send_default();
+    }
 }
 
 fn bounce_ball_on_obstacles(
@@ -193,12 +218,10 @@ fn bounce_ball_on_obstacles(
 fn bounce_ball_on_edges(
     ball_radius: f32,
     balls_query: &mut Query<(&mut Transform, &mut Ball)>,
-    ball_hit_ground_events: &mut EventWriter<BallHitGround>,
 )
 {
     let min_x = ball_radius;
     let max_x = WINDOW_USABLE_WORLD_WIDTH - ball_radius;
-    let min_y = ball_radius;
     let max_y = WINDOW_WORLD_HEIGHT - ball_radius;
 
     for (mut ball_transform, mut ball) in balls_query.iter_mut() {
@@ -211,11 +234,7 @@ fn bounce_ball_on_edges(
             ball.direction.x *= -1.0;
         }
 
-        if ball_position.y < min_y {
-            ball_position.y = min_y;
-            ball.direction.y *= -1.0;
-            ball_hit_ground_events.send_default();
-        } else if ball_position.y > max_y {
+        if ball_position.y > max_y {
             ball_position.y = max_y;
             ball.direction.y *= -1.0;
         }

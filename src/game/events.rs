@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 #[derive(Event, Default)]
-pub struct BallHitGround;
+pub struct LastBallDestroyed;
 
 #[derive(Event, Default)]
 pub struct BrickDestroyed {

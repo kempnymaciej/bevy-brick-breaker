@@ -15,9 +15,9 @@ use crate::{AppState};
 use paddle::{despawn_paddles, spawn_paddle, move_paddle, keep_paddle_synced_with_settings};
 use ball::{ spawn_first_ball, move_balls, despawn_balls };
 use brick::{ despawn_bricks, destroy_bricks_on_hit, spawn_bricks };
-use crate::game::ball::keep_ball_synced_with_settings;
+use crate::game::ball::{keep_ball_synced_with_settings, keep_destroying_balls};
 use crate::game::brick::{keep_brick_synced_with_settings, keep_spawning_bricks};
-use crate::game::events::{BallHitGround, BrickDestroyed};
+use crate::game::events::{BrickDestroyed, LastBallDestroyed};
 use crate::game::collectable::{despawn_collectables, keep_spawning_collectables};
 use crate::game::score_view::{despawn_score_view, spawn_score_view, update_score_view};
 use crate::game::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
@@ -45,8 +45,8 @@ impl Plugin for GamePlugin {
             .init_resource::<BrickGhost>()
             .init_resource::<PaddleSize>()
             .init_resource::<PaddleSpeed>()
-            .add_event::<BallHitGround>()
             .add_event::<BrickDestroyed>()
+            .add_event::<LastBallDestroyed>()
             .add_systems(OnEnter(AppState::InGame),
                 (
                     spawn_score_view,
@@ -68,6 +68,7 @@ impl Plugin for GamePlugin {
                          destroy_bricks_on_hit,
                          test_settings,
                          keep_ball_synced_with_settings,
+                         keep_destroying_balls,
                          keep_paddle_synced_with_settings,
                          keep_brick_synced_with_settings,
                          keep_spawning_bricks,
@@ -75,11 +76,11 @@ impl Plugin for GamePlugin {
                          move_sparks,
                          keep_despawning_sparks,
                          collect_collectables,
-                         check_end_game,
                      ).run_if(in_state(InGameState::Play)),
                      (
                          check_menu_condition,
-                         toggle_pause,
+                         check_toggle_pause_condition,
+                         check_summary_condition,
                      ),
                  ).run_if(in_state(AppState::InGame)),
             )
@@ -124,15 +125,6 @@ fn check_preparation_end_condition(
     }
 }
 
-fn check_end_game(
-    mut ball_hit_ground: EventReader<BallHitGround>,
-)
-{
-    for _event in ball_hit_ground.read() {
-        println!("end");
-    }
-}
-
 fn check_menu_condition(
     input: Res<Input<KeyCode>>,
     mut next_state: ResMut<NextState<AppState>>
@@ -143,11 +135,26 @@ fn check_menu_condition(
     }
 }
 
-fn toggle_pause(
+fn check_summary_condition(
+    mut last_ball_destroyed_events: EventReader<LastBallDestroyed>,
+    mut next_state: ResMut<NextState<InGameState>>,
+)
+{
+    if last_ball_destroyed_events.is_empty()
+    {
+        return;
+    }
+
+    last_ball_destroyed_events.clear();
+    next_state.set(InGameState::Summary);
+}
+
+fn check_toggle_pause_condition(
     input: Res<Input<KeyCode>>,
     current_state: Res<State<InGameState>>,
-    mut next_state: ResMut<NextState<InGameState>>
-) {
+    mut next_state: ResMut<NextState<InGameState>>,
+)
+{
     if input.just_pressed(KeyCode::P) {
         if *current_state.get() == InGameState::Play {
             next_state.set(InGameState::Pause);
