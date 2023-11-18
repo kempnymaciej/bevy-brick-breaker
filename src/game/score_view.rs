@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use crate::common::window_height_relative_scal::WindowHeightRelativeScale;
 use crate::game::settings::Score;
 
 #[derive(Component)]
