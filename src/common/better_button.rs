@@ -10,7 +10,7 @@ impl Plugin for BetterButtonPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
             update_color_buttons, update_release_buttons
-            ));
+        ));
     }
 }
 
@@ -48,7 +48,8 @@ impl Default for ColorButton {
 
 fn update_release_buttons(
     mut query: Query<(&Interaction, &mut ReleaseButton), With<Button>>
-) {
+)
+{
     for (interaction, mut release_button) in query.iter_mut() {
         if release_button.just_released {
             release_button.just_released = false
@@ -74,7 +75,8 @@ fn update_color_buttons(
         ),
         (Changed<Interaction>, With<Button>)
     >,
-) {
+)
+{
     for (color_button, interaction, mut color) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
@@ -89,4 +91,3 @@ fn update_color_buttons(
         }
     }
 }
-
