@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::ball::{BallObstacle};
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
 use crate::game::events::BrickDestroyed;
-use crate::game::settings::BrickGhost;
+use crate::game::resources::BrickGhost;
 use super::collider::BoxCollider;
 
 pub const BRICK_WIDTH: f32 = 64.0;

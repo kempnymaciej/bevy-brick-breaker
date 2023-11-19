@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use crate::common::better_button::{ReleaseButton};
 use crate::common::styles::{get_full_screen_menu_node_bundle, spawn_full_screen_menu_button, spawn_full_screen_menu_header};
 use crate::game::events::{MenuRequested, RestartRequested};
-use crate::game::settings::Score;
+use crate::game::resources::Score;
 
 #[derive(Component)]
 pub struct SummaryView;

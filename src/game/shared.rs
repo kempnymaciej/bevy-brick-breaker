@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::game::collectable::{Collectable, CollectableType};
-use super::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
+use super::resources::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
 use super::ball::{Ball, spawn_ball};
 use super::collider::BoxCollider;
 use super::paddle::Paddle;

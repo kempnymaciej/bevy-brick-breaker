@@ -2,7 +2,7 @@ pub mod ball;
 pub mod collider;
 mod brick;
 mod paddle;
-pub mod settings;
+pub mod resources;
 mod shared;
 pub mod events;
 mod collectable;
@@ -23,7 +23,7 @@ use crate::game::events::{BrickDestroyed, LastBallDestroyed, RestartRequested, M
 use crate::game::collectable::{despawn_collectables, keep_spawning_collectables};
 use crate::game::pause_view::{spawn_pause_view, despawn_pause_view, check_pause_interactions};
 use crate::game::score_view::{despawn_score_view, spawn_score_view, update_score_view};
-use crate::game::settings::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
+use crate::game::resources::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
 use crate::game::shared::{collect_collectables, keep_ball_at_paddle_center};
 use crate::game::spark::{keep_despawning_sparks, move_sparks};
 use crate::game::summary_view::{check_summary_interactions, despawn_summary_view, spawn_summary_view};

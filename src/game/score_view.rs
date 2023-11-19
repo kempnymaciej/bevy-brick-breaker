@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::game::settings::Score;
+use crate::game::resources::Score;
 
 #[derive(Component)]
 pub struct ScoreView;

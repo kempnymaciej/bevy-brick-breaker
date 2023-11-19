@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use super::settings::{PaddleSize, PaddleSpeed};
+use super::resources::{PaddleSize, PaddleSpeed};
 use super::collider::BoxCollider;
 use super::ball::{ BallObstacle, BallObstacleType };
 use crate::WINDOW_USABLE_WORLD_WIDTH;

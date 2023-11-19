@@ -3,7 +3,7 @@ use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
 use crate::game::events::LastBallDestroyed;
 use crate::game::shared::xy0;
 use super::collider::BoxCollider;
-use super::settings::{BallSize, BallSpeed};
+use super::resources::{BallSize, BallSpeed};
 
 pub const BALL_SIZE: f32 = 22.0;
 
