@@ -160,6 +160,20 @@ pub fn clone_balls(
     }
 }
 
+pub fn declone_balls(
+    commands: &mut Commands,
+    ball_query: &Query<Entity, With<Ball>>,
+)
+{
+    let mut declone = false;
+    for ball_entity in ball_query.iter() {
+        if declone {
+            commands.entity(ball_entity).despawn();
+        }
+        declone = !declone;
+    }
+}
+
 fn bounce_ball_on_obstacles(
     ball_radius: f32,
     balls_query: &mut Query<(&mut Transform, &mut Ball)>,

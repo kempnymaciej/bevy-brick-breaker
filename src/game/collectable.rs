@@ -20,7 +20,12 @@ const COLLECTABLE_METAS:  &'static [(CollectableType, CollectableMeta)] = &[
     }),
     (CollectableType::BallClone, CollectableMeta {
         texture_path: "sprites/collectables/ball_clone.png",
-        drop_weight: 4,
+        drop_weight: 3,
+        ..CollectableMeta::default()
+    }),
+    (CollectableType::BallDeclone, CollectableMeta {
+        texture_path: "sprites/collectables/ball_declone.png",
+        drop_weight: 3,
         ..CollectableMeta::default()
     }),
     (CollectableType::BallSizeUp, CollectableMeta {
@@ -78,6 +83,7 @@ const COLLECTABLE_METAS:  &'static [(CollectableType, CollectableMeta)] = &[
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CollectableType {
     BallClone,
+    BallDeclone,
     BallSizeUp,
     BallSizeDown,
     BallSpeedUp,

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::game::collectable::{Collectable, CollectableType};
 use super::resources::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
-use super::ball::{Ball, clone_balls};
+use super::ball::{Ball, clone_balls, declone_balls};
 use super::collider::BoxCollider;
 use super::paddle::Paddle;
 
@@ -27,6 +27,7 @@ pub fn collect_collectables(
     collectable_query: Query<(Entity, &Transform, &BoxCollider, &Collectable)>,
     paddle_query: Query<(&Transform, &BoxCollider), With<Paddle>>,
     ball_query: Query<(&Ball, &Transform)>,
+    ball_entity_query: Query<Entity, With<Ball>>,
     mut score: ResMut<Score>,
     mut ball_size: ResMut<BallSize>,
     mut ball_speed: ResMut<BallSpeed>,
@@ -47,6 +48,9 @@ pub fn collect_collectables(
                 match collectable.collectable_type {
                     CollectableType::BallClone => {
                         clone_balls(&mut commands, &asset_server, &ball_query, &ball_size);
+                    }
+                    CollectableType::BallDeclone => {
+                        declone_balls(&mut commands, &ball_entity_query);
                     }
                     CollectableType::BallSizeUp => {
                         ball_size.change_points(1);
