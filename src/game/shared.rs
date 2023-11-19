@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::game::collectable::{Collectable, CollectableType};
 use super::resources::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
-use super::ball::{Ball, spawn_ball};
+use super::ball::{Ball, clone_balls};
 use super::collider::BoxCollider;
 use super::paddle::Paddle;
 
@@ -46,10 +46,7 @@ pub fn collect_collectables(
             if overlap {
                 match collectable.collectable_type {
                     CollectableType::BallClone => {
-                        for (ball, ball_transform) in ball_query.iter() {
-                            spawn_ball(&mut commands, &asset_server,
-                                ball_transform.translation.xy(), -ball.direction.xy(), &ball_size);
-                        }
+                        clone_balls(&mut commands, &asset_server, &ball_query, &ball_size);
                     }
                     CollectableType::BallSizeUp => {
                         ball_size.change_points(1);

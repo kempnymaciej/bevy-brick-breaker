@@ -6,6 +6,7 @@ use super::collider::BoxCollider;
 use super::resources::{BallSize, BallSpeed};
 
 pub const BALL_SIZE: f32 = 22.0;
+const MAX_NUMBER_OF_BALLS: usize = 128;
 
 #[derive(Copy, Clone)]
 pub enum BallObstacleType {
@@ -135,6 +136,27 @@ pub fn keep_destroying_balls(
     if balls == 0
     {
         last_ball_destroyed_events.send_default();
+    }
+}
+
+pub fn clone_balls(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    ball_query: &Query<(&Ball, &Transform)>,
+    ball_size: &BallSize,
+)
+{
+    let mut number_of_balls = 0;
+    for _ball in ball_query.iter() {
+        number_of_balls += 1;
+    }
+
+    for (ball, ball_transform) in ball_query.iter() {
+        if number_of_balls >= MAX_NUMBER_OF_BALLS {
+            return;
+        }
+        spawn_ball(commands, asset_server, ball_transform.translation.xy(), -ball.direction.xy(), ball_size);
+        number_of_balls += 1;
     }
 }
 
