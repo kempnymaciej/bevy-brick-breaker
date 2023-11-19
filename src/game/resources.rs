@@ -1,9 +1,19 @@
+use std::time::Duration;
 use bevy::prelude::*;
 use crate::game::ball::{BALL_SIZE, BallObstacleType};
 use crate::game::paddle::PADDLE_WIDTH;
 
 #[derive(Resource, Default)]
 pub struct Score(pub usize);
+
+#[derive(Resource)]
+pub struct BrickRowSpawnCooldown(pub Timer);
+
+impl Default for BrickRowSpawnCooldown {
+    fn default() -> Self {
+        Self(Timer::new(Duration::from_millis(500), TimerMode::Once))
+    }
+}
 
 #[derive(Resource)]
 pub struct BallSpeed {

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::ball::{BallObstacle};
 use crate::{WINDOW_USABLE_WORLD_WIDTH, WINDOW_WORLD_HEIGHT};
 use crate::game::events::BrickDestroyed;
-use crate::game::resources::BrickGhost;
+use crate::game::resources::{BrickGhost, BrickRowSpawnCooldown};
 use super::collider::BoxCollider;
 
 pub const BRICK_WIDTH: f32 = 64.0;
@@ -101,8 +101,15 @@ pub fn keep_spawning_bricks(
     mut brick_query: Query<&mut Transform, With<Brick>>,
     asset_server: Res<AssetServer>,
     brick_ghost: Res<BrickGhost>,
+    time: Res<Time>,
+    mut brick_row_spawn_cooldown: ResMut<BrickRowSpawnCooldown>
 )
 {
+    brick_row_spawn_cooldown.0.tick(time.delta());
+    if !brick_row_spawn_cooldown.0.finished() {
+        return;
+    }
+
     let mut number_of_bricks = 0;
     let mut lowest_brick_y = f32::MAX;
 
@@ -123,4 +130,5 @@ pub fn keep_spawning_bricks(
     }
 
     spawn_row(0, &mut commands, &asset_server, &brick_ghost);
+    brick_row_spawn_cooldown.0.reset();
 }

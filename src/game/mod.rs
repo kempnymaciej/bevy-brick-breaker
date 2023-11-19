@@ -23,7 +23,7 @@ use crate::game::events::{BrickDestroyed, LastBallDestroyed, RestartRequested, M
 use crate::game::collectable::{despawn_collectables, keep_spawning_collectables};
 use crate::game::pause_view::{spawn_pause_view, despawn_pause_view, check_pause_interactions};
 use crate::game::score_view::{despawn_score_view, spawn_score_view, update_score_view};
-use crate::game::resources::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score};
+use crate::game::resources::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score, BrickRowSpawnCooldown};
 use crate::game::shared::{collect_collectables, keep_ball_at_paddle_center};
 use crate::game::spark::{keep_despawning_sparks, move_sparks};
 use crate::game::summary_view::{check_summary_interactions, despawn_summary_view, spawn_summary_view};
@@ -44,6 +44,7 @@ impl Plugin for GamePlugin {
         app
             .add_state::<InGameState>()
             .init_resource::<Score>()
+            .init_resource::<BrickRowSpawnCooldown>()
             .init_resource::<BallSize>()
             .init_resource::<BallSpeed>()
             .init_resource::<BrickGhost>()
@@ -123,6 +124,7 @@ fn clean_up(
 {
     next_state.set(InGameState::Preparation);
     commands.insert_resource(Score::default());
+    commands.insert_resource(BrickRowSpawnCooldown::default());
     commands.insert_resource(BallSize::default());
     commands.insert_resource(BallSpeed::default());
     commands.insert_resource(BrickGhost::default());
