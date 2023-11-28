@@ -9,7 +9,8 @@ pub struct BetterButtonPlugin;
 impl Plugin for BetterButtonPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (
-            update_color_buttons, update_release_buttons
+            update_color_buttons,
+            (update_release_buttons, update_release_buttons_with_force_key).chain()
         ));
     }
 }
@@ -18,6 +19,11 @@ impl Plugin for BetterButtonPlugin {
 pub struct ReleaseButton {
     pub just_released: bool,
     previous_interaction: Interaction,
+}
+
+#[derive(Component)]
+pub struct ReleaseButtonForceKey {
+    pub key_code: KeyCode,
 }
 
 #[derive(Component)]
@@ -32,6 +38,14 @@ impl Default for ReleaseButton {
         ReleaseButton {
             just_released: false,
             previous_interaction: Interaction::None
+        }
+    }
+}
+
+impl ReleaseButtonForceKey {
+    pub fn new(key_code: KeyCode) -> Self {
+        Self {
+            key_code
         }
     }
 }
@@ -63,6 +77,18 @@ fn update_release_buttons(
         }
 
         release_button.previous_interaction = *interaction;
+    }
+}
+
+fn update_release_buttons_with_force_key(
+    mut button_query: Query<(&mut ReleaseButton, &ReleaseButtonForceKey)>,
+    input: Res<Input<KeyCode>>,
+)
+{
+    for (mut button, key) in button_query.iter_mut() {
+        if input.just_pressed(key.key_code) {
+            button.just_released = true;
+        }
     }
 }
 

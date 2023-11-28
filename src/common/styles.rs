@@ -1,17 +1,19 @@
 use bevy::asset::AssetServer;
 use bevy::prelude::*;
-use crate::common::better_button::{ColorButton, ReleaseButton};
+use crate::common::better_button::{ColorButton, ReleaseButton, ReleaseButtonForceKey};
 
 pub fn spawn_full_screen_menu_button<T : Default>(
     parent: &mut ChildBuilder,
     asset_server: &Res<AssetServer>,
     label: impl Into<String>,
-) where (T, ReleaseButton, ColorButton, ButtonBundle): bevy::prelude::Bundle
+    key_code: KeyCode,
+) where (T, ReleaseButton, ReleaseButtonForceKey, ColorButton, ButtonBundle): bevy::prelude::Bundle
 {
     parent.spawn(
         (
             T::default(),
             ReleaseButton::default(),
+            ReleaseButtonForceKey::new(key_code),
             ColorButton::default(),
             ButtonBundle {
                 image: UiImage {
@@ -30,7 +32,7 @@ pub fn spawn_full_screen_menu_button<T : Default>(
         )
     ).with_children(|parent| {
         parent.spawn(
-            TextBundle::from_section(label, TextStyle {
+            TextBundle::from_section(format!("{} [{:?}]", label.into(), key_code), TextStyle {
                 font: asset_server.load("fonts/OpenSans-Regular.ttf"),
                 font_size: 40.,
                 color: Color::BLACK,

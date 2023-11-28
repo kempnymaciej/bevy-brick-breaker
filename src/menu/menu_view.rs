@@ -19,8 +19,8 @@ pub fn spawn_menu_ui(
         MenuView {},
         get_full_screen_menu_node_bundle(),
     )).with_children(|builder| {
-        spawn_full_screen_menu_button::<PlayButton>(builder, &asset_server, "Play");
-        spawn_full_screen_menu_button::<QuitButton>(builder, &asset_server, "Quit");
+        spawn_full_screen_menu_button::<PlayButton>(builder, &asset_server, "Play", KeyCode::P);
+        spawn_full_screen_menu_button::<QuitButton>(builder, &asset_server, "Quit", KeyCode::Q);
     });
 }
 

@@ -24,8 +24,8 @@ pub fn spawn_summary_view(
         )
     ).with_children(|parent| {
         spawn_full_screen_menu_header(parent, &asset_server, format!("Your score: {}", score.0));
-        spawn_full_screen_menu_button::<RestartButton>(parent, &asset_server, "Restart");
-        spawn_full_screen_menu_button::<MenuButton>(parent, &asset_server, "Menu");
+        spawn_full_screen_menu_button::<RestartButton>(parent, &asset_server, "Restart", KeyCode::R);
+        spawn_full_screen_menu_button::<MenuButton>(parent, &asset_server, "Menu", KeyCode::M);
     });
 }
 
