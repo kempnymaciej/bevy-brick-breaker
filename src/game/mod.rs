@@ -10,6 +10,7 @@ mod spark;
 mod score_view;
 mod summary_view;
 mod pause_view;
+mod preparation_view;
 
 use bevy::prelude::*;
 use crate::{AppState};
@@ -22,6 +23,7 @@ use crate::game::brick::{keep_brick_synced_with_settings, keep_spawning_bricks};
 use crate::game::events::{BrickDestroyed, LastBallDestroyed, RestartRequested, MenuRequested, TogglePauseRequested};
 use crate::game::collectable::{despawn_collectables, keep_spawning_collectables};
 use crate::game::pause_view::{spawn_pause_view, despawn_pause_view, check_pause_interactions};
+use crate::game::preparation_view::{despawn_preparation_view, spawn_preparation_view};
 use crate::game::score_view::{despawn_score_view, spawn_score_view, update_score_view};
 use crate::game::resources::{BallSize, BallSpeed, BrickGhost, PaddleSize, PaddleSpeed, Score, BrickRowSpawnCooldown};
 use crate::game::shared::{collect_collectables, keep_ball_at_paddle_center};
@@ -33,6 +35,7 @@ pub struct GamePlugin;
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum InGameState {
     #[default]
+    None,
     Preparation,
     Play,
     Pause,
@@ -62,6 +65,7 @@ impl Plugin for GamePlugin {
                     spawn_first_ball,
                     spawn_paddle,
                     spawn_bricks,
+                    start_up,
                 )
             )
             .add_systems(OnExit(AppState::InGame),
@@ -74,10 +78,12 @@ impl Plugin for GamePlugin {
                              clean_up,
                          )
             )
-            .add_systems(OnEnter(InGameState::Summary), spawn_summary_view)
-            .add_systems(OnExit(InGameState::Summary), despawn_summary_view)
+            .add_systems(OnEnter(InGameState::Preparation), spawn_preparation_view)
+            .add_systems(OnExit(InGameState::Preparation), despawn_preparation_view)
             .add_systems(OnEnter(InGameState::Pause), spawn_pause_view)
             .add_systems(OnExit(InGameState::Pause), despawn_pause_view)
+            .add_systems(OnEnter(InGameState::Summary), spawn_summary_view)
+            .add_systems(OnExit(InGameState::Summary), despawn_summary_view)
             .add_systems(Update,
                  (
                      (
@@ -117,12 +123,19 @@ impl Plugin for GamePlugin {
     }
 }
 
+fn start_up(
+    mut next_state: ResMut<NextState<InGameState>>,
+)
+{
+    next_state.set(InGameState::Preparation);
+}
+
 fn clean_up(
     mut commands: Commands,
     mut next_state: ResMut<NextState<InGameState>>,
 )
 {
-    next_state.set(InGameState::Preparation);
+    next_state.set(InGameState::None);
     commands.insert_resource(Score::default());
     commands.insert_resource(BrickRowSpawnCooldown::default());
     commands.insert_resource(BallSize::default());
