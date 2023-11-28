@@ -9,8 +9,6 @@ pub struct MenuView;
 #[derive(Component, Default)]
 pub struct PlayButton;
 #[derive(Component, Default)]
-pub struct ScoresButton;
-#[derive(Component, Default)]
 pub struct QuitButton;
 
 pub fn spawn_menu_ui(
@@ -22,7 +20,6 @@ pub fn spawn_menu_ui(
         get_full_screen_menu_node_bundle(),
     )).with_children(|builder| {
         spawn_full_screen_menu_button::<PlayButton>(builder, &asset_server, "Play");
-        spawn_full_screen_menu_button::<ScoresButton>(builder, &asset_server, "Scores");
         spawn_full_screen_menu_button::<QuitButton>(builder, &asset_server, "Quit");
     });
 }
@@ -38,7 +35,6 @@ pub fn despawn_menu_ui(
 
 pub fn check_menu_interactions(
     play_button_query: Query<&ReleaseButton, With<PlayButton>>,
-    scores_button_query: Query<&ReleaseButton, With<ScoresButton>>,
     quit_button_query: Query<&ReleaseButton, With<QuitButton>>,
     mut next_state: ResMut<NextState<AppState>>,
     mut app_exit_event_writer: EventWriter<AppExit>,
@@ -46,12 +42,6 @@ pub fn check_menu_interactions(
     for button in play_button_query.iter() {
         if button.just_released {
             next_state.set(AppState::InGame);
-            return;
-        }
-    }
-
-    for button in scores_button_query.iter() {
-        if button.just_released {
             return;
         }
     }
