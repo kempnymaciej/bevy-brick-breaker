@@ -8,7 +8,7 @@ pub struct BetterButtonPlugin;
 
 impl Plugin for BetterButtonPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
+        app.add_systems(PreUpdate, (
             update_color_buttons,
             (update_release_buttons, update_release_buttons_with_force_key).chain()
         ));
